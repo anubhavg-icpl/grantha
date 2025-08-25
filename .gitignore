@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -21,46 +25,226 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-.hypothesis/
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.ruff_cache/
+# PyInstaller
+*.manifest
+*.spec
 
-# Logs
-logs/
-*.log
+# Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
+# Translations
+*.mo
+*.pot
 
-# Project specific
-api/logs/
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
 instance/
 .webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Project specific
+logs/
+*.log
+.claude-flow/
+.hive-mind/
+api_backup/
+api_legacy.py
+TESTING_SETUP_SUMMARY.md
+setup_dev.py
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+.backup/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.cer
+.secrets/
+credentials/
+
+# ML/AI artifacts
+models/
+checkpoints/
+*.ckpt
+*.h5
+*.pkl
+*.joblib
+mlruns/
+
+# Data files (adjust based on your needs)
+data/
+*.csv
+*.json
+!configs/*.json
+!tests/fixtures/*.json
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Node modules (if frontend is added)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Cloud provider specific
+.aws/
+.azure/
+.gcp/
