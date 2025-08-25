@@ -78,8 +78,8 @@
 	let filterStatus = $state<string>('all');
 
 	const filteredAgents = $derived(() => {
-		if (filterStatus === 'all') return agents;
-		return agents.filter(agent => agent.status === filterStatus);
+		if (filterStatus === 'all') return agents as Agent[];
+		return agents.filter(agent => agent.status === filterStatus) as Agent[];
 	});
 
 	function getStatusIcon(status: string) {
@@ -170,7 +170,7 @@
 					<Button
 						variant={filterStatus === status ? 'default' : 'ghost'}
 						size="sm"
-						on:click={() => filterStatus = status}
+						onclick={() => filterStatus = status}
 					>
 						{status.charAt(0).toUpperCase() + status.slice(1)}
 					</Button>
@@ -179,16 +179,16 @@
 
 			<!-- Agent Grid -->
 			<div class="space-y-4">
-				{#each filteredAgents as agent}
+				{#each filteredAgents() as agent (agent.id)}
 					<div 
 						class={cn(
 							'rounded-lg border bg-card p-6 cursor-pointer transition-all hover:shadow-md',
-							selectedAgent?.id === agent.id && 'border-primary'
+							selectedAgent?.id === (agent as Agent).id && 'border-primary'
 						)}
 						role="button"
 						tabindex="0"
-						on:click={() => selectedAgent = agent}
-						on:keydown={(e) => e.key === 'Enter' && (selectedAgent = agent)}
+						onclick={() => selectedAgent = agent as Agent}
+						onkeydown={(e) => e.key === 'Enter' && (selectedAgent = agent as Agent)}
 					>
 						<div class="flex items-start justify-between mb-4">
 							<div class="flex items-center space-x-3">
@@ -201,7 +201,10 @@
 
 							<div class="flex items-center space-x-2">
 								<div class={cn('flex items-center space-x-1', getStatusColor(agent.status))}>
-									<svelte:component this={getStatusIcon(agent.status)} class="h-4 w-4" />
+									{#if agent.status}
+										{@const StatusIcon = getStatusIcon(agent.status)}
+										<StatusIcon class="h-4 w-4" />
+									{/if}
 									<span class="text-sm font-medium capitalize">{agent.status}</span>
 								</div>
 								
@@ -209,9 +212,9 @@
 									size="icon"
 									variant="ghost"
 									class="h-8 w-8"
-									on:click={(e) => {
+									onclick={(e) => {
 										e.stopPropagation();
-										toggleAgentStatus(agent);
+										toggleAgentStatus(agent as Agent);
 									}}
 									title={agent.status === 'active' ? 'Deactivate' : 'Activate'}
 								>
@@ -265,7 +268,10 @@
 						<div>
 							<h4 class="font-medium text-foreground mb-2">Status</h4>
 							<div class={cn('flex items-center space-x-2', getStatusColor(selectedAgent.status))}>
-								<svelte:component this={getStatusIcon(selectedAgent.status)} class="h-4 w-4" />
+								{#if selectedAgent.status}
+									{@const StatusIcon = getStatusIcon(selectedAgent.status)}
+									<StatusIcon class="h-4 w-4" />
+								{/if}
 								<span class="text-sm font-medium capitalize">{selectedAgent.status}</span>
 							</div>
 						</div>
@@ -293,7 +299,7 @@
 							<Button 
 								class="w-full" 
 								variant={selectedAgent.status === 'active' ? 'destructive' : 'default'}
-								on:click={() => toggleAgentStatus(selectedAgent)}
+								onclick={() => selectedAgent && toggleAgentStatus(selectedAgent)}
 							>
 								{#if selectedAgent.status === 'active'}
 									<Pause class="mr-2 h-4 w-4" />

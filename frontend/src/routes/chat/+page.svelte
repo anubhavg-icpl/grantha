@@ -52,7 +52,7 @@
 					<Button
 						size="icon"
 						variant="ghost"
-						on:click={handleNewChat}
+						onclick={handleNewChat}
 						title="New conversation"
 					>
 						<Plus class="h-4 w-4" />
@@ -65,7 +65,7 @@
 						size="sm"
 						variant="outline"
 						class="w-full justify-between text-xs"
-						on:click={() => showSettings = !showSettings}
+						onclick={() => showSettings = !showSettings}
 					>
 						<span class="truncate">
 							{$effectiveModel?.name || 'Select model'}
@@ -95,7 +95,7 @@
 						<Button
 							size="icon"
 							variant="ghost"
-							on:click={toggleSidebar}
+							onclick={toggleSidebar}
 							title="Show conversations"
 						>
 							<MessageSquare class="h-4 w-4" />
@@ -122,7 +122,7 @@
 					<Button
 						size="icon"
 						variant="ghost"
-						on:click={toggleSidebar}
+						onclick={toggleSidebar}
 						title="Hide conversations"
 					>
 						<MessageSquare class="h-4 w-4" />
@@ -145,7 +145,7 @@
 						<p class="text-muted-foreground mb-4">
 							Start a new conversation to begin chatting
 						</p>
-						<Button on:click={handleNewChat}>
+						<Button onclick={handleNewChat}>
 							<Plus class="mr-2 h-4 w-4" />
 							New Chat
 						</Button>

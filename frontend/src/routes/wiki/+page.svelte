@@ -1,21 +1,111 @@
 <script lang="ts">
-	import { BookOpen, Plus, Search, FileText, ExternalLink } from 'lucide-svelte';
+	import { BookOpen, Plus, Search, FileText, ExternalLink, AlertCircle, CheckCircle } from 'lucide-svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { modelsState, modelsActions } from '$lib/stores/models';
+	import { apiClient } from '$lib/api/client';
+	import type { WikiGenerationRequest, WikiStructureModel } from '$lib/types/api';
+	import { onMount } from 'svelte';
 
 	let repoUrl = $state('');
 	let searchQuery = $state('');
 	let isGenerating = $state(false);
+	let generationResult = $state<{status: string; wiki_structure?: WikiStructureModel; error?: string; provider?: string; model?: string} | null>(null);
+	let generationError = $state<string | null>(null);
+	let recentWikis = $state<WikiStructureModel[]>([]);
 
-	function handleGenerateWiki() {
-		if (!repoUrl.trim()) return;
+	onMount(() => {
+		// Load model config if not already loaded
+		if (!$modelsState.config) {
+			modelsActions.loadConfig();
+		}
+		
+		// Load saved wikis from localStorage
+		loadSavedWikis();
+	});
+
+	function loadSavedWikis() {
+		try {
+			const saved = localStorage.getItem('grantha-generated-wikis');
+			if (saved) {
+				recentWikis = JSON.parse(saved);
+			}
+		} catch (error) {
+			console.error('Failed to load saved wikis:', error);
+		}
+	}
+
+	function saveWikiToLocal(wiki: WikiStructureModel) {
+		try {
+			recentWikis = [wiki, ...recentWikis.slice(0, 9)]; // Keep max 10 wikis
+			localStorage.setItem('grantha-generated-wikis', JSON.stringify(recentWikis));
+		} catch (error) {
+			console.error('Failed to save wiki:', error);
+		}
+	}
+
+	async function handleGenerateWiki() {
+		if (!repoUrl.trim() || isGenerating) return;
 		
 		isGenerating = true;
-		// TODO: Implement wiki generation
-		setTimeout(() => {
+		generationError = null;
+		generationResult = null;
+
+		try {
+			const { provider, model } = modelsActions.getCurrentSelection();
+			
+			const request: WikiGenerationRequest = {
+				repo_url: repoUrl.trim(),
+				language: 'en',
+				provider: provider || undefined,
+				model: model || undefined
+			};
+
+			const result = await apiClient.generateWiki(request);
+			
+			if (result.status === 'error') {
+				generationError = result.message || 'Wiki generation failed';
+			} else {
+				generationResult = result;
+				
+				// Save to local storage if successful
+				if (result.wiki_structure) {
+					saveWikiToLocal({
+						...result.wiki_structure,
+						repo_url: repoUrl.trim(),
+						generated_at: Date.now()
+					});
+				}
+			}
+			
+		} catch (error) {
+			generationError = error instanceof Error ? error.message : 'Failed to generate wiki';
+			console.error('Wiki generation error:', error);
+		} finally {
 			isGenerating = false;
-		}, 2000);
+		}
 	}
+
+	function clearResult() {
+		generationResult = null;
+		generationError = null;
+	}
+
+	function isValidUrl(url: string): boolean {
+		try {
+			new URL(url);
+			return url.includes('github.com') || url.includes('gitlab.com') || url.includes('bitbucket.org');
+		} catch {
+			return false;
+		}
+	}
+
+	const filteredWikis = $derived(recentWikis.filter(wiki => 
+		!searchQuery || 
+		wiki.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+		wiki.description?.toLowerCase().includes(searchQuery.toLowerCase())
+	));
 </script>
 
 <svelte:head>
@@ -53,17 +143,73 @@
 						placeholder="https://github.com/user/repo"
 						bind:value={repoUrl}
 						disabled={isGenerating}
+						class={!isValidUrl(repoUrl) && repoUrl.trim() ? 'border-destructive' : ''}
 					/>
+					{#if repoUrl.trim() && !isValidUrl(repoUrl)}
+						<p class="text-sm text-destructive mt-1">
+							Please enter a valid GitHub, GitLab, or Bitbucket repository URL
+						</p>
+					{/if}
 				</div>
+				
+				{#if $modelsState.error}
+					<div class="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+						<div class="flex items-center gap-2">
+							<AlertCircle class="h-4 w-4 text-destructive" />
+							<p class="text-sm text-destructive">Model configuration error: {$modelsState.error}</p>
+						</div>
+					</div>
+				{/if}
+				
+				{#if generationError}
+					<div class="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<AlertCircle class="h-4 w-4 text-destructive" />
+								<p class="text-sm text-destructive">{generationError}</p>
+							</div>
+							<Button variant="ghost" size="sm" onclick={clearResult}>
+								×
+							</Button>
+						</div>
+					</div>
+				{/if}
+				
+				{#if generationResult && generationResult.status === 'success' && generationResult.wiki_structure}
+					<div class="bg-success/10 border border-success/20 rounded-lg p-4 space-y-3">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<CheckCircle class="h-4 w-4 text-success" />
+								<p class="text-sm font-medium text-success">Wiki generated successfully!</p>
+							</div>
+							<Button variant="ghost" size="sm" onclick={clearResult}>
+								×
+							</Button>
+						</div>
+						<div class="text-sm space-y-2">
+							<p><strong>Title:</strong> {generationResult.wiki_structure.title}</p>
+							<p><strong>Description:</strong> {generationResult.wiki_structure.description}</p>
+							<p><strong>Pages:</strong> {generationResult.wiki_structure.pages?.length || 0}</p>
+							<p><strong>Provider:</strong> {generationResult.provider} • <strong>Model:</strong> {generationResult.model}</p>
+						</div>
+					</div>
+				{/if}
 				
 				<Button
 					class="w-full"
-					loading={isGenerating}
-					disabled={!repoUrl.trim() || isGenerating}
-					on:click={handleGenerateWiki}
+					disabled={!repoUrl.trim() || !isValidUrl(repoUrl) || isGenerating || $modelsState.isLoading}
+					onclick={handleGenerateWiki}
 				>
-					<BookOpen class="mr-2 h-4 w-4" />
-					Generate Wiki Documentation
+					{#if isGenerating}
+						<LoadingSpinner size="sm" class="mr-2" />
+						Generating Wiki...
+					{:else if $modelsState.isLoading}
+						<LoadingSpinner size="sm" class="mr-2" />
+						Loading Models...
+					{:else}
+						<BookOpen class="mr-2 h-4 w-4" />
+						Generate Wiki Documentation
+					{/if}
 				</Button>
 			</div>
 		</div>
@@ -87,79 +233,60 @@
 		</div>
 
 		<!-- Wiki Grid -->
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			<!-- Sample wiki cards -->
-			<div class="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
-				<div class="flex items-start justify-between mb-3">
-					<div class="flex items-center">
-						<BookOpen class="h-5 w-5 text-primary mr-2" />
-						<h3 class="font-semibold text-foreground">Sample Project</h3>
+		{#if filteredWikis.length > 0}
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				{#each filteredWikis as wiki (wiki.id || wiki.title)}
+					<div class="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
+						<div class="flex items-start justify-between mb-3">
+							<div class="flex items-center">
+								<BookOpen class="h-5 w-5 text-primary mr-2" />
+								<h3 class="font-semibold text-foreground truncate">{wiki.title}</h3>
+							</div>
+							{#if wiki.repo_url}
+								<Button 
+									size="icon" 
+									variant="ghost" 
+									class="h-8 w-8"
+									onclick={() => window.open(wiki.repo_url, '_blank')}
+								>
+									<ExternalLink class="h-4 w-4" />
+								</Button>
+							{/if}
+						</div>
+						
+						<p class="text-sm text-muted-foreground mb-4 line-clamp-3">
+							{wiki.description || 'No description available'}
+						</p>
+						
+						<div class="flex items-center justify-between text-xs text-muted-foreground">
+							<span>
+								{#if wiki.generated_at}
+									Generated {new Date(wiki.generated_at).toLocaleDateString()}
+								{:else}
+									Recent
+								{/if}
+							</span>
+							<span>{wiki.pages?.length || 0} pages</span>
+						</div>
 					</div>
-					<Button size="icon" variant="ghost" class="h-8 w-8">
-						<ExternalLink class="h-4 w-4" />
-					</Button>
-				</div>
-				
-				<p class="text-sm text-muted-foreground mb-4">
-					A comprehensive wiki for a sample TypeScript project with API documentation and guides.
-				</p>
-				
-				<div class="flex items-center justify-between text-xs text-muted-foreground">
-					<span>Generated 2 hours ago</span>
-					<span>15 pages</span>
-				</div>
+				{/each}
 			</div>
-
-			<div class="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
-				<div class="flex items-start justify-between mb-3">
-					<div class="flex items-center">
-						<BookOpen class="h-5 w-5 text-primary mr-2" />
-						<h3 class="font-semibold text-foreground">React Components</h3>
-					</div>
-					<Button size="icon" variant="ghost" class="h-8 w-8">
-						<ExternalLink class="h-4 w-4" />
-					</Button>
-				</div>
-				
-				<p class="text-sm text-muted-foreground mb-4">
-					Documentation for a React component library with examples and usage guides.
-				</p>
-				
-				<div class="flex items-center justify-between text-xs text-muted-foreground">
-					<span>Generated 1 day ago</span>
-					<span>23 pages</span>
-				</div>
-			</div>
-
-			<div class="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
-				<div class="flex items-start justify-between mb-3">
-					<div class="flex items-center">
-						<BookOpen class="h-5 w-5 text-primary mr-2" />
-						<h3 class="font-semibold text-foreground">API Backend</h3>
-					</div>
-					<Button size="icon" variant="ghost" class="h-8 w-8">
-						<ExternalLink class="h-4 w-4" />
-					</Button>
-				</div>
-				
-				<p class="text-sm text-muted-foreground mb-4">
-					Complete API documentation with endpoints, schemas, and integration examples.
-				</p>
-				
-				<div class="flex items-center justify-between text-xs text-muted-foreground">
-					<span>Generated 3 days ago</span>
-					<span>31 pages</span>
-				</div>
-			</div>
-		</div>
-
-		<!-- Empty state when no results -->
-		{#if searchQuery && searchQuery.length > 0}
+		{:else if searchQuery.length > 0}
+			<!-- Empty state when search has no results -->
 			<div class="text-center py-12">
 				<Search class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
 				<h3 class="text-lg font-semibold text-foreground mb-2">No wikis found</h3>
 				<p class="text-muted-foreground">
 					No wikis match your search query "{searchQuery}"
+				</p>
+			</div>
+		{:else if recentWikis.length === 0}
+			<!-- Empty state when no wikis exist -->
+			<div class="text-center py-12">
+				<BookOpen class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+				<h3 class="text-lg font-semibold text-foreground mb-2">No wikis yet</h3>
+				<p class="text-muted-foreground">
+					Generate your first wiki using the form above
 				</p>
 			</div>
 		{/if}

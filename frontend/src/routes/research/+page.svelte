@@ -58,17 +58,26 @@
 		try {
 			const request: DeepResearchRequest = {
 				query: query.trim(),
-				depth: 'comprehensive',
-				include_sources: true
+				repo_url: 'https://github.com/example/repo', // Default repo for research context
+				language: 'en'
 			};
 
 			const response = await apiClient.deepResearch(request);
 			
-			// Update the research result
-			research.status = 'completed';
-			research.results = response;
-			research.completedAt = new Date().toISOString();
+			// Update the research result based on actual API response
+			if (response.status === 'success') {
+				research.status = 'completed';
+				research.results = {
+					summary: response.results || 'Research completed successfully',
+					sources: [], // Backend doesn't provide sources yet
+					insights: response.results ? [response.results] : []
+				};
+			} else {
+				research.status = 'error';
+				research.error = response.message || 'Research failed';
+			}
 			
+			research.completedAt = new Date().toISOString();
 			results = [...results]; // Trigger reactivity
 		} catch (error) {
 			research.status = 'error';
@@ -154,7 +163,7 @@
 						id="research-query"
 						bind:value={query}
 						placeholder="Enter your research topic or question..."
-						on:keypress={handleKeyPress}
+						onkeypress={handleKeyPress}
 						class="flex-1"
 						disabled={isLoading}
 					/>

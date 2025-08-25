@@ -322,12 +322,15 @@
 				<button
 					type="button"
 					class="w-full p-6 text-left hover:bg-muted/50 transition-colors"
-					on:click={() => toggleSection(section.id)}
+					onclick={() => toggleSection(section.id)}
 				>
 					<div class="flex items-center justify-between">
 						<div class="flex items-center space-x-3">
 							<div class="p-2 rounded-lg bg-primary/10">
-								<svelte:component this={section.icon} class="h-5 w-5 text-primary" />
+								{#if section.icon}
+									{@const IconComponent = section.icon}
+									<IconComponent class="h-5 w-5 text-primary" />
+								{/if}
 							</div>
 							<div>
 								<h2 class="text-lg font-semibold text-foreground">{section.title}</h2>
@@ -380,7 +383,7 @@
 				<p class="text-muted-foreground">
 					No documentation matches your search query "{searchQuery}"
 				</p>
-				<Button variant="outline" class="mt-4" on:click={() => searchQuery = ''}>
+				<Button variant="outline" class="mt-4" onclick={() => searchQuery = ''}>
 					Clear Search
 				</Button>
 			</div>

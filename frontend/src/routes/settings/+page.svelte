@@ -39,7 +39,17 @@
 		apiTimeout: 30
 	});
 
-	let originalSettings = $state<UserSettings>({ ...settings });
+	const initialSettings: UserSettings = {
+		theme: 'system',
+		language: 'en',
+		notifications: true,
+		autoSave: true,
+		maxTokens: 4096,
+		temperature: 0.7,
+		apiTimeout: 30
+	};
+	
+	let originalSettings = $state<UserSettings>({ ...initialSettings });
 	let hasChanges = $derived(JSON.stringify(settings) !== JSON.stringify(originalSettings));
 	let isSaving = $state(false);
 
