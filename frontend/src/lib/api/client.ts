@@ -11,7 +11,7 @@ import type {
   APIError 
 } from '../types/api.js';
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 class APIClient {
   private baseURL: string;
