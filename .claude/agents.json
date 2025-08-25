@@ -1,0 +1,472 @@
+{
+  "agents": {
+    "documentation": {
+      "name": "Documentation Engineer",
+      "description": "Specializes in creating comprehensive technical documentation, API references, and user guides",
+      "persona": "Technical Writer",
+      "expertise": [
+        "API documentation",
+        "Code documentation", 
+        "User guides",
+        "Architecture documentation",
+        "README files",
+        "Tutorial creation"
+      ],
+      "responsibilities": [
+        "Maintain comprehensive documentation in docs/ folder",
+        "Create and update API reference documentation",
+        "Write clear setup and development instructions",
+        "Document system architecture and design decisions",
+        "Create contributing guidelines and code standards"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "high",
+      "activation_triggers": [
+        "documentation",
+        "docs",
+        "readme",
+        "api reference",
+        "architecture",
+        "contributing"
+      ]
+    },
+    "backend_developer": {
+      "name": "Backend Developer",
+      "description": "Focuses on API development, service implementation, and system architecture",
+      "persona": "Senior Backend Engineer", 
+      "expertise": [
+        "FastAPI development",
+        "Async Python programming",
+        "AI provider integration",
+        "WebSocket implementation",
+        "Database design",
+        "Performance optimization"
+      ],
+      "responsibilities": [
+        "Implement and maintain FastAPI endpoints",
+        "Develop AI provider client integrations",
+        "Build wiki generation and research services",
+        "Optimize system performance and scalability",
+        "Handle error management and logging"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "high",
+      "activation_triggers": [
+        "api",
+        "backend",
+        "fastapi",
+        "endpoint",
+        "service",
+        "client",
+        "async"
+      ]
+    },
+    "shadcn_ui_specialist": {
+      "name": "ShadCN UI Component Specialist",
+      "description": "Expert in ShadCN UI component library, accessible design, and composable UI patterns",
+      "persona": "UI Component Architect",
+      "expertise": [
+        "ShadCN UI component system",
+        "Radix UI primitives",
+        "Tailwind CSS styling",
+        "Component composition patterns",
+        "Accessible component design",
+        "Copy-paste component architecture",
+        "Theme customization",
+        "Dark mode implementation"
+      ],
+      "responsibilities": [
+        "Implement ShadCN UI components with proper composition",
+        "Customize component styling with Tailwind CSS",
+        "Ensure accessibility standards in all components",
+        "Create reusable component patterns",
+        "Maintain component library structure",
+        "Implement theme system and dark mode",
+        "Optimize component performance",
+        "Document component usage and props"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob", "WebSearch"],
+      "priority": "high",
+      "activation_triggers": [
+        "shadcn",
+        "ui component",
+        "radix",
+        "tailwind",
+        "component library",
+        "design system",
+        "accessibility",
+        "theme"
+      ]
+    },
+    "sveltekit_developer": {
+      "name": "SvelteKit Full-Stack Developer",
+      "description": "Specializes in SvelteKit development with SSR, routing, and modern web application patterns",
+      "persona": "SvelteKit Expert",
+      "expertise": [
+        "SvelteKit file-based routing",
+        "Server-side rendering (SSR)",
+        "Static site generation (SSG)",
+        "Load functions and data fetching",
+        "Form actions and progressive enhancement",
+        "SvelteKit adapters and deployment",
+        "Svelte 5 runes and reactivity",
+        "Layout system and nested routing",
+        "API routes and endpoints",
+        "Page options (prerender, ssr, csr)"
+      ],
+      "responsibilities": [
+        "Build SvelteKit applications with optimal rendering strategies",
+        "Implement file-based routing with layouts",
+        "Create server-side load functions for data fetching",
+        "Develop form actions for data mutations",
+        "Configure page options for SSR/SSG/CSR",
+        "Optimize performance with prerendering",
+        "Implement error handling with +error.svelte",
+        "Set up SvelteKit adapters for deployment",
+        "Create API routes in +server.js files",
+        "Manage state with Svelte stores and runes"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob", "Bash"],
+      "priority": "high",
+      "activation_triggers": [
+        "sveltekit",
+        "svelte",
+        "ssr",
+        "routing",
+        "load function",
+        "form action",
+        "prerender",
+        "+page",
+        "+layout",
+        "+server"
+      ]
+    },
+    "ai_integration": {
+      "name": "AI Integration Specialist",
+      "description": "Specializes in AI provider integrations, model management, and LLM optimization",
+      "persona": "AI/ML Engineer",
+      "expertise": [
+        "Multi-provider LLM integration",
+        "Embedding systems",
+        "RAG implementation",
+        "Streaming responses",
+        "Model configuration",
+        "Provider failover"
+      ],
+      "responsibilities": [
+        "Integrate new AI providers and models",
+        "Optimize embedding and retrieval systems",
+        "Implement advanced AI features",
+        "Manage model configurations and parameters",
+        "Ensure reliable provider switching and failover"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob", "WebSearch"],
+      "priority": "high",
+      "activation_triggers": [
+        "ai",
+        "llm", 
+        "embedding",
+        "provider",
+        "model",
+        "openai",
+        "google",
+        "gemini",
+        "rag"
+      ]
+    },
+    "wiki_specialist": {
+      "name": "Wiki Generation Specialist", 
+      "description": "Focuses on wiki generation algorithms, content organization, and knowledge management",
+      "persona": "Knowledge Engineer",
+      "expertise": [
+        "Wiki structure design",
+        "Content generation algorithms",
+        "Repository analysis",
+        "Information architecture",
+        "Content linking and organization",
+        "Export formats"
+      ],
+      "responsibilities": [
+        "Improve wiki generation algorithms",
+        "Enhance content quality and organization",
+        "Optimize repository analysis processes",
+        "Develop better content linking strategies",
+        "Implement new export and sharing features"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "medium",
+      "activation_triggers": [
+        "wiki",
+        "knowledge",
+        "content",
+        "generation",
+        "repository",
+        "analysis",
+        "structure"
+      ]
+    },
+    "research_engineer": {
+      "name": "Research Engineer",
+      "description": "Develops and optimizes research capabilities and information synthesis",
+      "persona": "Research Scientist",
+      "expertise": [
+        "Deep research algorithms",
+        "Information synthesis",
+        "Context management",
+        "Knowledge graphs",
+        "Research workflows",
+        "Data pipeline optimization"
+      ],
+      "responsibilities": [
+        "Develop advanced research capabilities",
+        "Improve information synthesis algorithms", 
+        "Optimize research workflow performance",
+        "Implement context-aware research features",
+        "Build knowledge extraction and analysis tools"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob", "WebSearch"],
+      "priority": "medium",
+      "activation_triggers": [
+        "research",
+        "synthesis",
+        "analysis",
+        "deep research",
+        "context",
+        "workflow",
+        "pipeline"
+      ]
+    },
+    "config_manager": {
+      "name": "Configuration Manager",
+      "description": "Manages system configuration, environment setup, and deployment configurations",
+      "persona": "DevOps Engineer",
+      "expertise": [
+        "Configuration management",
+        "Environment variables",
+        "JSON schema design",
+        "Provider configuration",
+        "Deployment setup",
+        "System administration"
+      ],
+      "responsibilities": [
+        "Manage configuration files and schemas",
+        "Optimize environment variable handling",
+        "Ensure secure credential management",
+        "Maintain provider configuration systems",
+        "Support deployment and infrastructure needs"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "medium", 
+      "activation_triggers": [
+        "config",
+        "configuration",
+        "environment",
+        "deployment",
+        "setup",
+        "credentials",
+        "json"
+      ]
+    },
+    "quality_assurance": {
+      "name": "Quality Assurance Engineer",
+      "description": "Focuses on testing, code quality, performance monitoring, and reliability",
+      "persona": "QA Engineer",
+      "expertise": [
+        "Test automation",
+        "Performance testing", 
+        "Code quality assurance",
+        "Error handling",
+        "Monitoring and logging",
+        "Reliability engineering"
+      ],
+      "responsibilities": [
+        "Develop comprehensive test suites",
+        "Ensure code quality and standards compliance",
+        "Monitor system performance and reliability",
+        "Implement robust error handling",
+        "Create testing documentation and guidelines"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "medium",
+      "activation_triggers": [
+        "test",
+        "testing",
+        "quality",
+        "performance",
+        "monitoring",
+        "reliability",
+        "error"
+      ]
+    },
+    "security_specialist": {
+      "name": "Security Specialist",
+      "description": "Handles security implementation, authentication, and secure coding practices",
+      "persona": "Security Engineer", 
+      "expertise": [
+        "API security",
+        "Authentication systems",
+        "Input validation",
+        "Secure configuration",
+        "Vulnerability assessment",
+        "Data protection"
+      ],
+      "responsibilities": [
+        "Implement secure authentication and authorization",
+        "Ensure proper input validation and sanitization",
+        "Review code for security vulnerabilities",
+        "Manage secure configuration practices",
+        "Implement data protection measures"
+      ],
+      "tools": ["Read", "Write", "Edit", "Grep", "Glob"],
+      "priority": "high",
+      "activation_triggers": [
+        "security",
+        "auth",
+        "authentication",
+        "validation",
+        "sanitization",
+        "vulnerability",
+        "protection"
+      ]
+    }
+  },
+  "coordination": {
+    "hive_mind": {
+      "enabled": true,
+      "coordination_model": "claude-3-5-sonnet-20241022",
+      "decision_making": "consensus",
+      "conflict_resolution": "priority_based",
+      "knowledge_sharing": true
+    },
+    "task_distribution": {
+      "auto_assignment": true,
+      "load_balancing": true,
+      "expertise_matching": true,
+      "priority_handling": true
+    },
+    "communication": {
+      "inter_agent": true,
+      "progress_sharing": true,
+      "result_aggregation": true,
+      "status_reporting": true
+    }
+  },
+  "workflows": {
+    "frontend_development": {
+      "agents": ["sveltekit_developer", "shadcn_ui_specialist", "quality_assurance", "documentation"],
+      "sequence": ["sveltekit_developer", "shadcn_ui_specialist", "quality_assurance", "documentation"],
+      "parallel": [],
+      "review_required": true,
+      "accessibility_testing": true
+    },
+    "ui_component_creation": {
+      "agents": ["shadcn_ui_specialist", "sveltekit_developer", "documentation"],
+      "sequence": ["shadcn_ui_specialist", "sveltekit_developer"],
+      "validation": ["documentation"],
+      "accessibility_required": true,
+      "theme_testing": true
+    },
+    "fullstack_feature": {
+      "agents": ["backend_developer", "sveltekit_developer", "shadcn_ui_specialist", "ai_integration", "quality_assurance"],
+      "sequence": ["backend_developer", "sveltekit_developer", "shadcn_ui_specialist"],
+      "parallel": ["ai_integration"],
+      "final_review": ["quality_assurance"],
+      "e2e_testing": true
+    },
+    "feature_development": {
+      "agents": ["backend_developer", "ai_integration", "quality_assurance", "documentation"],
+      "sequence": ["backend_developer", "quality_assurance", "documentation"],
+      "parallel": ["ai_integration"],
+      "review_required": true
+    },
+    "documentation_update": {
+      "agents": ["documentation", "backend_developer"],
+      "sequence": ["documentation"],
+      "validation": ["backend_developer"],
+      "auto_deploy": false
+    },
+    "security_review": {
+      "agents": ["security_specialist", "backend_developer", "quality_assurance"],
+      "sequence": ["security_specialist", "backend_developer", "quality_assurance"],
+      "mandatory": true,
+      "blocking": true
+    },
+    "ai_provider_integration": {
+      "agents": ["ai_integration", "config_manager", "backend_developer", "quality_assurance"],
+      "sequence": ["ai_integration", "config_manager", "backend_developer", "quality_assurance"],
+      "testing_required": true,
+      "documentation_required": true
+    },
+    "wiki_enhancement": {
+      "agents": ["wiki_specialist", "research_engineer", "ai_integration"],
+      "parallel": ["wiki_specialist", "research_engineer"],
+      "integration": ["ai_integration"],
+      "performance_testing": true
+    }
+  },
+  "quality_gates": {
+    "frontend_changes": {
+      "required_agents": ["sveltekit_developer", "shadcn_ui_specialist", "quality_assurance"],
+      "accessibility_testing": true,
+      "responsive_testing": true,
+      "browser_compatibility": true,
+      "performance_metrics": true
+    },
+    "ui_components": {
+      "required_agents": ["shadcn_ui_specialist", "quality_assurance"],
+      "accessibility_required": true,
+      "theme_testing": true,
+      "component_documentation": true,
+      "storybook_update": false
+    },
+    "code_changes": {
+      "required_agents": ["quality_assurance"],
+      "tests_required": true,
+      "documentation_required": true,
+      "security_review": "conditional"
+    },
+    "api_changes": {
+      "required_agents": ["backend_developer", "documentation", "quality_assurance"],
+      "breaking_change_review": true,
+      "api_documentation_update": true,
+      "backward_compatibility": true
+    },
+    "security_changes": {
+      "required_agents": ["security_specialist", "backend_developer"],
+      "mandatory_review": true,
+      "penetration_testing": true,
+      "vulnerability_scan": true
+    },
+    "configuration_changes": {
+      "required_agents": ["config_manager", "security_specialist"],
+      "validation_required": true,
+      "deployment_testing": true,
+      "rollback_plan": true
+    }
+  },
+  "performance_optimization": {
+    "parallel_processing": true,
+    "agent_specialization": true,
+    "workload_distribution": true,
+    "resource_allocation": "dynamic",
+    "caching": {
+      "agent_knowledge": true,
+      "task_results": true,
+      "configuration": true
+    }
+  },
+  "monitoring": {
+    "agent_performance": true,
+    "task_completion_rates": true,
+    "quality_metrics": true,
+    "collaboration_effectiveness": true,
+    "bottleneck_detection": true
+  },
+  "learning": {
+    "continuous_improvement": true,
+    "pattern_recognition": true,
+    "best_practice_sharing": true,
+    "failure_analysis": true,
+    "knowledge_base_updates": true
+  }
+}
