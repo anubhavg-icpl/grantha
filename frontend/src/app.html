@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="%sveltekit.theme%">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="Grantha - Advanced AI Platform for Documentation, Chat, and Research" />
+		<meta name="keywords" content="AI, Documentation, Chat, Research, LLM, API" />
+		<meta name="author" content="Grantha Team" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Grantha - AI Platform" />
+		<meta property="og:description" content="Advanced AI Platform for Documentation, Chat, and Research" />
+		<meta property="og:image" content="%sveltekit.assets%/og-image.png" />
+
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:title" content="Grantha - AI Platform" />
+		<meta property="twitter:description" content="Advanced AI Platform for Documentation, Chat, and Research" />
+		<meta property="twitter:image" content="%sveltekit.assets%/twitter-image.png" />
+
+		<!-- Preload critical resources -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+		
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover" class="font-sans antialiased">
+		<div style="display: contents" class="app">%sveltekit.body%</div>
+	</body>
+</html>
