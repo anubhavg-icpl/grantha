@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { authActions } from '$stores/auth';
 	import Button from '../ui/button.svelte';
-	import ThemeToggle from '../ui/theme-toggle.svelte';
+	// import ThemeToggle from '../ui/theme-toggle.svelte';
 	import { Menu, LogOut, User, Settings } from 'lucide-svelte';
 	import { type Writable } from 'svelte/store';
 
@@ -74,7 +74,7 @@
 	<!-- Right side -->
 	<div class="flex items-center space-x-2">
 		<!-- Theme toggle -->
-		<ThemeToggle />
+		<!-- <ThemeToggle /> -->
 
 		<!-- User menu -->
 		<div class="relative">
