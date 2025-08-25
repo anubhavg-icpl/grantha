@@ -9,7 +9,10 @@ NC='\033[0m' # No Color
 
 # Load environment variables
 if [ -f .env ]; then
-    export $(cat .env | sed 's/#.*//g' | xargs)
+    # Properly handle .env file with spaces and special characters
+    set -a
+    source .env
+    set +a
     echo -e "${GREEN}✓${NC} Loaded environment from .env"
 else
     echo -e "${YELLOW}⚠${NC} No .env file found, using defaults"
@@ -125,6 +128,40 @@ setup_project() {
     echo -e "${GREEN}✓${NC} Project setup complete!"
 }
 
+# Stop running services
+stop_services() {
+    echo -e "${BLUE}Stopping Grantha services...${NC}"
+    
+    # Kill Python/Uvicorn processes
+    if pgrep -f "uvicorn.*grantha" > /dev/null; then
+        pkill -f "uvicorn.*grantha"
+        echo -e "${GREEN}✓${NC} Stopped API server"
+    else
+        echo -e "${YELLOW}⚠${NC} API server not running"
+    fi
+    
+    # Kill Vite/Node processes for frontend
+    if pgrep -f "vite.*dev.*port.*3000" > /dev/null; then
+        pkill -f "vite.*dev.*port.*3000"
+        echo -e "${GREEN}✓${NC} Stopped frontend server"
+    else
+        echo -e "${YELLOW}⚠${NC} Frontend server not running"
+    fi
+    
+    # Also check for processes on specific ports
+    if lsof -ti:8000 > /dev/null 2>&1; then
+        kill -9 $(lsof -ti:8000) 2>/dev/null
+        echo -e "${GREEN}✓${NC} Cleared port 8000"
+    fi
+    
+    if lsof -ti:3000 > /dev/null 2>&1; then
+        kill -9 $(lsof -ti:3000) 2>/dev/null
+        echo -e "${GREEN}✓${NC} Cleared port 3000"
+    fi
+    
+    echo -e "${GREEN}✓${NC} All services stopped"
+}
+
 # Clean build artifacts
 clean() {
     echo -e "${BLUE}Cleaning build artifacts...${NC}"
@@ -173,6 +210,7 @@ show_help() {
     echo "  api           Start only the Python API server (port 8000)"
     echo "  frontend      Start only the frontend development server (port 3000)"
     echo "  dev           Start both API and frontend in development mode"
+    echo "  stop          Stop all running Grantha services"
     echo "  build         Build the frontend for production"
     echo "  install       Install all dependencies"
     echo "  setup         Full setup: install dependencies and create .env from template"
@@ -194,6 +232,9 @@ case "${1:-dev}" in
         ;;
     dev)
         start_dev
+        ;;
+    stop)
+        stop_services
         ;;
     build)
         build_frontend
