@@ -1,0 +1,209 @@
+# Test Configuration for Grantha
+# This file defines test settings and parameters
+
+# Test Environment Settings
+environment:
+  testing: true
+  log_level: "WARNING"
+  database_url: "sqlite:///:memory:"
+  
+# Mock API Keys (never use real keys in tests)
+api_keys:
+  google: "test_google_key"
+  openai: "test_openai_key"  
+  openrouter: "test_openrouter_key"
+  aws_access_key: "test_aws_key"
+  aws_secret_key: "test_aws_secret"
+
+# Test Data Configurations
+test_data:
+  sample_repo_url: "https://github.com/test/sample-repo"
+  sample_owner: "testuser"
+  sample_repo: "testrepo"
+  sample_language: "en"
+  
+  # Sample wiki structure for testing
+  sample_wiki:
+    title: "Test Wiki"
+    description: "A test wiki for unit testing"
+    pages:
+      - id: "overview"
+        title: "Project Overview"
+        content: "# Overview\nThis is a test project."
+        filePaths: ["README.md"]
+        importance: "high"
+        relatedPages: ["architecture"]
+      - id: "architecture"
+        title: "System Architecture" 
+        content: "# Architecture\nSystem design details."
+        filePaths: ["main.py", "app.py"]
+        importance: "high"
+        relatedPages: ["overview"]
+
+# Performance Test Thresholds
+performance:
+  response_time:
+    health_endpoint: 0.1  # 100ms
+    root_endpoint: 0.2    # 200ms
+    config_endpoints: 0.5 # 500ms
+    wiki_generation: 2.0  # 2 seconds (mocked)
+    cache_operations: 1.0 # 1 second
+    
+  concurrency:
+    max_concurrent_requests: 10
+    timeout_seconds: 5
+    
+  memory:
+    max_memory_increase_mb: 10  # 10MB max increase during tests
+
+# Coverage Requirements
+coverage:
+  minimum_line_coverage: 80
+  minimum_branch_coverage: 70
+  fail_under: 80
+  
+  # Files to include in coverage
+  include:
+    - "api/*.py"
+    
+  # Files to exclude from coverage  
+  exclude:
+    - "api/test_*.py"
+    - "tests/*"
+    - "*/venv/*"
+    - "*/__pycache__/*"
+
+# Test Timeouts (in seconds)
+timeouts:
+  unit_test: 5
+  integration_test: 30
+  e2e_test: 300
+  performance_test: 60
+
+# Retry Settings
+retry:
+  max_attempts: 3
+  backoff_factor: 2
+  network_tests_only: true
+
+# Mock Settings
+mocking:
+  # External APIs to always mock
+  mock_apis:
+    - google_generativeai
+    - openai
+    - boto3
+    - azure
+    
+  # File system operations to mock in unit tests
+  mock_filesystem: true
+  
+  # Network operations to mock
+  mock_network: true
+
+# Test Markers Configuration
+markers:
+  unit:
+    description: "Unit tests that don't require external dependencies"
+    timeout: 5
+    
+  integration: 
+    description: "Integration tests that test component interactions"
+    timeout: 30
+    
+  e2e:
+    description: "End-to-end tests that test complete workflows"
+    timeout: 300
+    
+  slow:
+    description: "Tests that take more than a few seconds"
+    skip_by_default: true
+    
+  network:
+    description: "Tests that require network access"
+    skip_in_ci: true
+    
+  performance:
+    description: "Performance and load tests"
+    skip_by_default: true
+    
+  requires_api_key:
+    description: "Tests that require real API keys"
+    skip_in_ci: true
+
+# Fixture Configuration
+fixtures:
+  # Scope settings for different fixtures
+  scopes:
+    database_session: "function"
+    client_session: "session"
+    temp_directory: "function"
+    
+  # Auto-use fixtures
+  auto_use:
+    - setup_test_logging
+    - mock_env_vars
+
+# Reporting Configuration
+reporting:
+  formats:
+    - html
+    - xml
+    - term-missing
+    
+  output_directories:
+    html: "htmlcov"
+    xml: "coverage.xml"
+    json: "coverage.json"
+    
+  # Additional reports to generate
+  generate_reports:
+    - pytest_html
+    - junit_xml
+    - allure
+
+# CI/CD Specific Settings
+ci:
+  # Parallel execution settings
+  parallel:
+    enabled: true
+    workers: "auto"
+    
+  # Artifact collection
+  artifacts:
+    - "htmlcov/"
+    - "coverage.xml" 
+    - "pytest-report.html"
+    - "test-results.xml"
+    
+  # Notification settings
+  notifications:
+    on_failure: true
+    on_success: false
+    include_coverage: true
+
+# Docker Test Settings
+docker:
+  test_image: "grantha-test:latest"
+  test_command: "python -m pytest tests/ -v"
+  environment_variables:
+    - "TESTING=1"
+    - "LOG_LEVEL=WARNING"
+    
+# Database Test Settings
+database:
+  test_db_url: "sqlite:///:memory:"
+  fixtures_path: "tests/fixtures/db_fixtures.json"
+  reset_between_tests: true
+
+# Logging Configuration for Tests
+logging:
+  level: "WARNING"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Suppress noisy loggers during tests
+  suppress_loggers:
+    - "httpx"
+    - "asyncio"
+    - "urllib3"
+    - "requests"

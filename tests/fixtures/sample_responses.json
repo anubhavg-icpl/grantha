@@ -1,0 +1,273 @@
+{
+  "google_gemini_responses": {
+    "simple_query": {
+      "text": "This is a sample response from Google Gemini for testing purposes.",
+      "parts": [
+        {
+          "text": "This is a sample response from Google Gemini for testing purposes."
+        }
+      ]
+    },
+    "wiki_generation": {
+      "text": "{\n  \"title\": \"Sample Repository Wiki\",\n  \"description\": \"Auto-generated documentation\",\n  \"pages\": [\n    {\n      \"id\": \"overview\",\n      \"title\": \"Project Overview\",\n      \"content\": \"# Project Overview\\n\\nThis repository contains a sample application.\",\n      \"filePaths\": [\"README.md\"],\n      \"importance\": \"high\",\n      \"relatedPages\": [\"architecture\"]\n    }\n  ]\n}"
+    },
+    "mermaid_diagram": {
+      "text": "graph TD\n    A[Main Application] --> B[API Layer]\n    A --> C[Database]\n    B --> D[External Services]\n    C --> E[Data Models]"
+    }
+  },
+  "openai_responses": {
+    "chat_completion": {
+      "choices": [
+        {
+          "message": {
+            "role": "assistant",
+            "content": "This is a sample response from OpenAI for testing purposes."
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 10,
+        "completion_tokens": 15,
+        "total_tokens": 25
+      }
+    },
+    "embedding": {
+      "data": [
+        {
+          "embedding": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+          "index": 0
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 5,
+        "total_tokens": 5
+      }
+    },
+    "streaming_response": [
+      {
+        "choices": [
+          {
+            "delta": {
+              "content": "Hello"
+            },
+            "finish_reason": null
+          }
+        ]
+      },
+      {
+        "choices": [
+          {
+            "delta": {
+              "content": " world"
+            },
+            "finish_reason": null
+          }
+        ]
+      },
+      {
+        "choices": [
+          {
+            "delta": {
+              "content": "!"
+            },
+            "finish_reason": "stop"
+          }
+        ]
+      }
+    ]
+  },
+  "wiki_structures": {
+    "simple_wiki": {
+      "id": "simple_test_wiki",
+      "title": "Simple Test Wiki",
+      "description": "A simple wiki structure for testing",
+      "pages": [
+        {
+          "id": "page1",
+          "title": "Introduction",
+          "content": "# Introduction\n\nWelcome to the test wiki.",
+          "filePaths": ["README.md"],
+          "importance": "high",
+          "relatedPages": ["page2"]
+        },
+        {
+          "id": "page2",
+          "title": "Getting Started", 
+          "content": "# Getting Started\n\nInstructions for getting started.",
+          "filePaths": ["docs/getting_started.md"],
+          "importance": "medium",
+          "relatedPages": ["page1"]
+        }
+      ],
+      "sections": [
+        {
+          "id": "main",
+          "title": "Main Documentation",
+          "pages": ["page1", "page2"],
+          "subsections": []
+        }
+      ],
+      "rootSections": ["main"]
+    },
+    "complex_wiki": {
+      "id": "complex_test_wiki",
+      "title": "Complex Test Wiki",
+      "description": "A complex wiki structure with multiple sections",
+      "pages": [
+        {
+          "id": "overview",
+          "title": "Project Overview",
+          "content": "# Project Overview\n\nDetailed project overview.",
+          "filePaths": ["README.md", "docs/overview.md"],
+          "importance": "high",
+          "relatedPages": ["architecture", "api_docs"]
+        },
+        {
+          "id": "architecture",
+          "title": "System Architecture",
+          "content": "# System Architecture\n\nSystem design and architecture details.",
+          "filePaths": ["docs/architecture.md", "src/main.py"],
+          "importance": "high",
+          "relatedPages": ["overview", "api_docs"]
+        },
+        {
+          "id": "api_docs",
+          "title": "API Documentation",
+          "content": "# API Documentation\n\nComplete API reference.",
+          "filePaths": ["src/api.py", "docs/api.md"],
+          "importance": "high",
+          "relatedPages": ["overview", "architecture"]
+        },
+        {
+          "id": "deployment",
+          "title": "Deployment Guide",
+          "content": "# Deployment Guide\n\nHow to deploy the application.",
+          "filePaths": ["docker/Dockerfile", "docs/deployment.md"],
+          "importance": "medium",
+          "relatedPages": ["configuration"]
+        },
+        {
+          "id": "configuration",
+          "title": "Configuration",
+          "content": "# Configuration\n\nConfiguration options and settings.",
+          "filePaths": ["config/settings.py", "docs/config.md"],
+          "importance": "medium",
+          "relatedPages": ["deployment"]
+        }
+      ],
+      "sections": [
+        {
+          "id": "core_docs",
+          "title": "Core Documentation",
+          "pages": ["overview", "architecture", "api_docs"],
+          "subsections": []
+        },
+        {
+          "id": "ops_docs",
+          "title": "Operations",
+          "pages": ["deployment", "configuration"],
+          "subsections": []
+        }
+      ],
+      "rootSections": ["core_docs", "ops_docs"]
+    }
+  },
+  "repository_structures": {
+    "python_project": {
+      "files": [
+        {
+          "path": "main.py",
+          "content": "def main():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    main()",
+          "language": "python"
+        },
+        {
+          "path": "utils.py",
+          "content": "def helper_function(x):\n    return x * 2\n\nclass Helper:\n    def __init__(self):\n        pass",
+          "language": "python"
+        },
+        {
+          "path": "README.md",
+          "content": "# Test Project\n\nThis is a test project for unit testing.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```",
+          "language": "markdown"
+        },
+        {
+          "path": "requirements.txt",
+          "content": "fastapi>=0.95.0\nuvicorn>=0.21.1\npydantic>=2.0.0",
+          "language": "text"
+        }
+      ],
+      "structure": {
+        "python_files": ["main.py", "utils.py"],
+        "documentation": ["README.md"],
+        "configuration": ["requirements.txt"]
+      }
+    },
+    "fastapi_project": {
+      "files": [
+        {
+          "path": "app.py",
+          "content": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\nasync def root():\n    return {'message': 'Hello World'}",
+          "language": "python"
+        },
+        {
+          "path": "models.py",
+          "content": "from pydantic import BaseModel\n\nclass Item(BaseModel):\n    name: str\n    price: float",
+          "language": "python"
+        },
+        {
+          "path": "database.py",
+          "content": "from sqlalchemy import create_engine\nfrom sqlalchemy.ext.declarative import declarative_base\n\nBase = declarative_base()",
+          "language": "python"
+        }
+      ],
+      "structure": {
+        "python_files": ["app.py", "models.py", "database.py"],
+        "web_framework": ["app.py"],
+        "data_models": ["models.py", "database.py"]
+      }
+    }
+  },
+  "mermaid_diagrams": {
+    "architecture": "graph TD\n    A[Client] --> B[API Gateway]\n    B --> C[Auth Service]\n    B --> D[Business Logic]\n    D --> E[Database]\n    D --> F[External APIs]",
+    "data_flow": "flowchart LR\n    Input[User Input] --> Validate[Validation]\n    Validate --> Process[Processing]\n    Process --> Store[Database]\n    Store --> Output[Response]",
+    "api_flow": "sequenceDiagram\n    participant C as Client\n    participant A as API\n    participant D as Database\n    \n    C->>+A: POST /api/data\n    A->>+D: Store data\n    D-->>-A: Success\n    A-->>-C: 201 Created"
+  },
+  "error_responses": {
+    "invalid_repo_url": {
+      "error": "Invalid repository URL",
+      "details": "The provided repository URL is not valid or accessible"
+    },
+    "provider_not_found": {
+      "error": "Provider configuration not found",
+      "details": "The specified provider is not configured or supported"
+    },
+    "generation_failed": {
+      "error": "Wiki generation failed",
+      "details": "An error occurred during wiki structure generation"
+    },
+    "cache_not_found": {
+      "error": "Wiki cache not found",
+      "details": "No cached wiki data found for the specified repository"
+    }
+  },
+  "performance_data": {
+    "response_times": {
+      "health_endpoint": 0.05,
+      "root_endpoint": 0.1,
+      "models_config": 0.3,
+      "wiki_generation": 1.5,
+      "cache_operations": 0.8
+    },
+    "memory_usage": {
+      "baseline_mb": 50,
+      "after_wiki_generation_mb": 55,
+      "after_large_export_mb": 60
+    },
+    "concurrent_requests": {
+      "requests_per_second": 100,
+      "average_response_time": 0.2,
+      "max_response_time": 0.5
+    }
+  }
+}
