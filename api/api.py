@@ -9,12 +9,17 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 import google.generativeai as genai
 import asyncio
+from fastapi.responses import StreamingResponse
 
 # Configure logging
 from api.logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
+
+# Import new modules
+from api.wiki_generator import WikiGenerator
+from api.deep_research import DeepResearch
 
 
 # Initialize FastAPI app
@@ -141,6 +146,29 @@ class ModelConfig(BaseModel):
     """
     providers: List[Provider] = Field(..., description="List of available model providers")
     defaultProvider: str = Field(..., description="ID of the default provider")
+
+class WikiGenerationRequest(BaseModel):
+    """
+    Model for requesting wiki generation with Mermaid diagrams.
+    """
+    repo_url: str = Field(..., description="URL of the repository")
+    language: str = Field("en", description="Language for wiki content")
+    provider: str = Field("google", description="Model provider")
+    model: Optional[str] = Field(None, description="Specific model to use")
+    token: Optional[str] = Field(None, description="Access token for private repositories")
+    repo_type: str = Field("github", description="Repository type")
+
+class DeepResearchRequest(BaseModel):
+    """
+    Model for requesting deep research on a topic.
+    """
+    query: str = Field(..., description="Research question")
+    repo_url: str = Field(..., description="Repository URL for context")
+    language: str = Field("en", description="Language for responses")
+    provider: str = Field("google", description="Model provider")
+    model: Optional[str] = Field(None, description="Specific model to use")
+    token: Optional[str] = Field(None, description="Access token for private repositories")
+    repo_type: str = Field("github", description="Repository type")
 
 class AuthorizationConfig(BaseModel):
     code: str = Field(..., description="Authorization code")
@@ -633,3 +661,161 @@ async def get_processed_projects():
     except Exception as e:
         logger.error(f"Error listing processed projects from {WIKI_CACHE_DIR}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to list processed projects from server cache.")
+
+
+@app.post("/api/wiki/generate")
+async def generate_wiki_structure(request: WikiGenerationRequest):
+    """
+    Generate a comprehensive wiki structure with Mermaid diagrams for a repository.
+    
+    Args:
+        request: Wiki generation request containing repo URL and parameters
+        
+    Returns:
+        Generated wiki structure with pages and diagrams
+    """
+    try:
+        logger.info(f"Generating wiki structure for {request.repo_url}")
+        
+        # Initialize wiki generator
+        generator = WikiGenerator(provider=request.provider, model=request.model)
+        
+        # Clone or get repository path
+        from api.data_pipeline import download_repo
+        from adalflow.utils import get_adalflow_default_root_path
+        import os
+        
+        # Create local path for repository
+        repo_name = request.repo_url.rstrip('/').split('/')[-1]
+        local_path = os.path.join(get_adalflow_default_root_path(), "repos", repo_name)
+        
+        # Download repository
+        repo_path = download_repo(request.repo_url, local_path, request.repo_type, request.token)
+        
+        # Generate wiki structure
+        wiki_structure = generator.generate_wiki_structure(
+            repo_path=repo_path,
+            repo_url=request.repo_url,
+            language=request.language
+        )
+        
+        logger.info(f"Wiki structure generated successfully with {len(wiki_structure['pages'])} pages")
+        
+        return JSONResponse(content=wiki_structure)
+        
+    except Exception as e:
+        logger.error(f"Error generating wiki structure: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate wiki structure: {str(e)}")
+
+
+@app.post("/api/research/deep")
+async def conduct_deep_research(request: DeepResearchRequest):
+    """
+    Conduct deep, multi-turn research on a topic using repository context.
+    
+    Args:
+        request: Deep research request containing query and parameters
+        
+    Returns:
+        Streaming response with research updates at each stage
+    """
+    async def research_stream():
+        try:
+            # Initialize deep research
+            researcher = DeepResearch(
+                provider=request.provider,
+                model=request.model
+            )
+            
+            # Conduct research and stream results
+            async for research_update in researcher.conduct_research(
+                query=request.query,
+                repo_url=request.repo_url,
+                repo_type=request.repo_type,
+                token=request.token,
+                language=request.language
+            ):
+                # Format as JSON string for streaming
+                yield json.dumps(research_update) + "\n"
+                
+        except Exception as e:
+            logger.error(f"Error in deep research: {e}", exc_info=True)
+            error_response = {
+                "stage": "error",
+                "content": f"Research error: {str(e)}",
+                "timestamp": datetime.now().isoformat()
+            }
+            yield json.dumps(error_response) + "\n"
+    
+    try:
+        logger.info(f"Starting deep research for query: {request.query}")
+        
+        return StreamingResponse(
+            research_stream(),
+            media_type="application/x-ndjson",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Content-Type-Options": "nosniff"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error initiating deep research: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to start deep research: {str(e)}")
+
+
+@app.get("/api/wiki/mermaid")
+async def get_mermaid_diagrams(
+    repo_url: str = Query(..., description="Repository URL"),
+    diagram_type: str = Query("architecture", description="Type of diagram to generate")
+):
+    """
+    Generate Mermaid diagrams for a repository.
+    
+    Args:
+        repo_url: URL of the repository
+        diagram_type: Type of diagram (architecture, data-flow, api-flow)
+        
+    Returns:
+        Mermaid diagram syntax
+    """
+    try:
+        logger.info(f"Generating {diagram_type} diagram for {repo_url}")
+        
+        # Initialize wiki generator
+        generator = WikiGenerator()
+        
+        # Clone or get repository path
+        from api.data_pipeline import download_repo
+        from adalflow.utils import get_adalflow_default_root_path
+        import os
+        
+        # Create local path for repository
+        repo_name = repo_url.rstrip('/').split('/')[-1]
+        local_path = os.path.join(get_adalflow_default_root_path(), "repos", repo_name)
+        
+        # Download repository
+        repo_path = download_repo(repo_url, local_path)
+        
+        # Analyze repository
+        repo_structure = generator._analyze_repository(repo_path)
+        
+        # Generate appropriate diagram
+        if diagram_type == "architecture":
+            diagram = generator._generate_architecture_diagram(repo_structure)
+        elif diagram_type == "data-flow":
+            diagram = generator._generate_data_flow_diagram(repo_structure)
+        elif diagram_type == "api-flow":
+            diagram = generator._generate_api_flow_diagram(repo_structure)
+        else:
+            raise ValueError(f"Unknown diagram type: {diagram_type}")
+        
+        return {
+            "diagram_type": diagram_type,
+            "mermaid": diagram,
+            "repo_url": repo_url
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating Mermaid diagram: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate diagram: {str(e)}")

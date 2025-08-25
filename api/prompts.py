@@ -1,5 +1,106 @@
 """Module containing all prompts used in the Grantha (ग्रंथ) API project."""
 
+# Wiki generation prompts
+WIKI_GENERATION_PROMPT = """
+Generate a comprehensive wiki structure for the following repository.
+Consider the repository structure, programming languages used, and common patterns.
+Create documentation that is helpful for both users and developers.
+
+Repository Analysis:
+{repo_analysis}
+
+Language: {language}
+
+Generate wiki pages that cover:
+1. Project overview
+2. Architecture and design
+3. Getting started guide
+4. API documentation (if applicable)
+5. Testing documentation (if applicable)
+"""
+
+MERMAID_DIAGRAM_PROMPT = """
+Generate a Mermaid diagram for the following component:
+Component Type: {component_type}
+Repository Structure: {repo_structure}
+
+Create a clear, informative diagram that visualizes the {component_type}.
+Use appropriate Mermaid syntax (graph, flowchart, or sequenceDiagram).
+"""
+
+# DeepResearch prompts
+DEEP_RESEARCH_PLAN_PROMPT = """
+You are conducting deep research on the following topic. Create a comprehensive research plan.
+
+**Research Question:** {query}
+
+**Initial Context:**
+{context}
+
+**Language:** {language}
+
+Create a structured research plan that includes:
+1. Key areas to investigate
+2. Questions to answer
+3. Information gaps to fill
+4. Methodology for investigation
+5. Expected outcomes
+
+Format your response as a clear, structured research plan.
+"""
+
+DEEP_RESEARCH_UPDATE_PROMPT = """
+Continue the deep research investigation.
+
+**Original Question:** {query}
+**Research Iteration:** {iteration}
+
+**Previous Research:**
+{previous_research}
+
+**Focus Areas for This Iteration:**
+{focus_areas}
+
+**New Context Retrieved:**
+{new_context}
+
+**Language:** {language}
+
+Provide a research update that:
+1. Builds on previous findings
+2. Investigates the focus areas
+3. Identifies new insights
+4. Highlights remaining questions
+5. Suggests next steps if needed
+
+Be thorough and analytical in your investigation.
+"""
+
+DEEP_RESEARCH_CONCLUSION_PROMPT = """
+Provide a comprehensive conclusion to the research investigation.
+
+**Original Question:** {query}
+**Total Research Iterations:** {total_iterations}
+
+**All Research Findings:**
+{all_research}
+
+**Language:** {language}
+
+Create a final conclusion that:
+1. Synthesizes all findings
+2. Provides a complete answer to the original question
+3. Highlights key discoveries
+4. Notes any limitations or caveats
+5. Offers actionable recommendations
+
+Structure your conclusion clearly with:
+- Executive Summary
+- Detailed Findings
+- Key Takeaways
+- Recommendations
+"""
+
 # System prompt for RAG
 RAG_SYSTEM_PROMPT = r"""
 You are a code assistant which answers user questions on a Github Repo.
