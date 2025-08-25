@@ -43,7 +43,7 @@
 	const dispatch = createEventDispatcher();
 
 	let visible = $state(true);
-	let timeoutId: number | null = null;
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 	function dismiss() {
 		visible = false;
@@ -85,7 +85,10 @@
 {#if visible}
 	<div class={toastVariants({ variant, className })}>
 		<div class="flex items-center space-x-2">
-			<svelte:component this={getIcon(variant)} class="h-4 w-4 flex-shrink-0" />
+			{#if variant}
+				{@const IconComponent = getIcon(variant)}
+				<IconComponent class="h-4 w-4 flex-shrink-0" />
+			{/if}
 			<div class="grid gap-1">
 				{#if title}
 					<div class="text-sm font-semibold">{title}</div>
@@ -99,7 +102,7 @@
 			<button
 				type="button"
 				class="absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-1 group-hover:opacity-100"
-				on:click={handleDismiss}
+				onclick={handleDismiss}
 			>
 				<X class="h-4 w-4" />
 			</button>

@@ -51,6 +51,7 @@
 <button
 	class={buttonVariants({ variant, size, className })}
 	disabled={disabled || loading}
+	onclick={onclick}
 	{...restProps}
 >
 	{#if loading}

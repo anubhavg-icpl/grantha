@@ -17,7 +17,7 @@
 		open: boolean;
 	}
 
-	let { open }: Props = $props();
+	let { open = $bindable() }: Props = $props();
 
 	const navigation = [
 		{ name: 'Dashboard', href: '/', icon: Home },
@@ -70,7 +70,10 @@
 				)}
 				title={!open ? item.name : undefined}
 			>
-				<svelte:component this={item.icon} class="h-4 w-4" />
+				{#if true}
+					{@const IconComponent = item.icon}
+					<IconComponent class="h-4 w-4" />
+				{/if}
 				{#if open}
 					<span class="ml-3">{item.name}</span>
 				{/if}

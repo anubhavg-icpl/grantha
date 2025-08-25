@@ -43,8 +43,8 @@
 	<!-- Backdrop -->
 	<div
 		class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-		on:click={handleBackdropClick}
-		on:keydown={handleKeydown}
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
@@ -61,7 +61,7 @@
 				<button
 					type="button"
 					class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-					on:click={closeDialog}
+					onclick={closeDialog}
 				>
 					<X class="h-4 w-4" />
 					<span class="sr-only">Close</span>
