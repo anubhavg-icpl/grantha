@@ -85,7 +85,7 @@ Generate embeddings for text input.
 /**
  * Grantha Chat Service
  * Handles chat completions with multiple LLM providers
- * 
+ *
  * @class ChatService
  * @example
  * const chatService = new ChatService();
@@ -126,7 +126,7 @@ AI-powered documentation and knowledge management system.
 ## Quick Start
 \`\`\`bash
 # Clone the repository
-git clone https://github.com/yourusername/grantha.git
+git clone https://github.com/anubhavg-icpl/grantha.git
 
 # Install dependencies
 npm install
