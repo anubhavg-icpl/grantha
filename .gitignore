@@ -244,3 +244,4 @@ docker-compose.override.yml
 !Makefile
 !pytest.ini
 !.github/
+INTEGRATION_TEST_REPORT.md
