@@ -108,12 +108,64 @@ async def get_model_config():
         raise HTTPException(status_code=500, detail="Failed to retrieve model configuration")
 
 
-# Wiki routes (placeholder - will need to import actual implementations)
+# Wiki routes
 @wiki_router.post("/generate")
 async def generate_wiki(request: WikiGenerationRequest):
     """Generate wiki documentation for a repository."""
-    # This will need to be implemented with the actual wiki generator
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    try:
+        # Use Gemini model for wiki generation if available
+        if gemini_model:
+            wiki_prompt = f"""
+            Generate comprehensive wiki documentation for repository: {request.repo_url}
+            Language: {request.language}
+            
+            Create structured documentation including:
+            1. Project overview and description
+            2. Installation and setup instructions
+            3. Architecture overview
+            4. API documentation
+            5. Usage examples
+            6. Contributing guidelines
+            7. FAQ section
+            
+            Format the output in a clear, well-structured wiki format.
+            """
+            
+            response = gemini_model.generate_content(wiki_prompt)
+            
+            # Create a basic wiki structure
+            wiki_structure = {
+                "id": f"wiki_{request.repo_url.replace('/', '_')}",
+                "title": f"Wiki for {request.repo_url}",
+                "description": "Auto-generated wiki documentation",
+                "pages": [
+                    {
+                        "id": "overview",
+                        "title": "Overview",
+                        "content": response.text,
+                        "filePaths": [],
+                        "importance": "high",
+                        "relatedPages": []
+                    }
+                ],
+                "sections": [],
+                "rootSections": ["overview"]
+            }
+            
+            return {
+                "wiki_structure": wiki_structure,
+                "status": "success",
+                "provider": request.provider or "google",
+                "model": request.model or "gemini-2.0-flash-exp"
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "Wiki generation requires Google API key configuration."
+            }
+    except Exception as e:
+        logger.error(f"Error in wiki generation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @wiki_router.post("/cache")
@@ -130,20 +182,85 @@ async def export_wiki(request: WikiExportRequest):
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
-# Chat routes (placeholder)
+# Chat routes
 @chat_router.post("/completion")
 async def chat_completion(request: ChatRequest):
     """Handle chat completion requests."""
-    # This will need to be implemented with the actual chat logic
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    try:
+        # Use Gemini model if available
+        if gemini_model:
+            # Convert messages to a single prompt
+            prompt = "\n".join([
+                f"{msg.get('role', 'user')}: {msg.get('content', '')}"
+                for msg in request.messages
+            ])
+            
+            # Generate response
+            response = gemini_model.generate_content(prompt)
+            
+            return ChatResponse(
+                content=response.text,
+                role="assistant",
+                model=request.model or "gemini-2.0-flash-exp",
+                provider=request.provider or "google"
+            )
+        else:
+            # Fallback response if no API key
+            return ChatResponse(
+                content="Chat API is not configured. Please set up Google API key.",
+                role="assistant",
+                model="none",
+                provider="none"
+            )
+    except Exception as e:
+        logger.error(f"Error in chat completion: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# Research routes (placeholder)
+# Research routes
 @research_router.post("/deep")
 async def deep_research(request: DeepResearchRequest):
     """Perform deep research on a topic."""
-    # This will need to be implemented with the actual research logic
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    try:
+        # Use Gemini model for research if available
+        if gemini_model:
+            # Create research prompt with context
+            research_prompt = f"""
+            Research Query: {request.query}
+            Repository Context: {request.repo_url}
+            Language: {request.language}
+            
+            Please provide a comprehensive research response covering:
+            1. Key insights and findings
+            2. Technical details
+            3. Best practices and recommendations
+            4. Relevant code examples if applicable
+            5. Additional resources
+            """
+            
+            response = gemini_model.generate_content(research_prompt)
+            
+            return {
+                "query": request.query,
+                "results": response.text,
+                "repo_url": request.repo_url,
+                "provider": request.provider or "google",
+                "model": request.model or "gemini-2.0-flash-exp",
+                "language": request.language,
+                "status": "success"
+            }
+        else:
+            return {
+                "query": request.query,
+                "results": "Research API requires Google API key configuration.",
+                "repo_url": request.repo_url,
+                "provider": "none",
+                "model": "none",
+                "status": "error"
+            }
+    except Exception as e:
+        logger.error(f"Error in deep research: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Simple routes
