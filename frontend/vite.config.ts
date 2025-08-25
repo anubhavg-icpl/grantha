@@ -50,16 +50,7 @@ export default defineConfig(({ mode }) => {
 		},
 		build: {
 			target: 'es2020',
-			sourcemap: mode === 'development',
-			rollupOptions: {
-				output: {
-					manualChunks: {
-						vendor: ['svelte', '@sveltejs/kit'],
-						ui: ['lucide-svelte', 'tailwind-merge', 'clsx'],
-						utils: ['zod']
-					}
-				}
-			}
+			sourcemap: mode === 'development'
 		},
 		optimizeDeps: {
 			include: ['svelte', 'lucide-svelte']

@@ -16,7 +16,11 @@
 	let messagesContainer: HTMLDivElement;
 	let copiedMessageId: string | null = $state(null);
 
-	afterUpdate(() => {
+	// Auto-scroll to bottom when messages change
+	$effect(() => {
+		// Watch for changes in conversation messages
+		conversation.messages;
+		$chatState.streamingMessage;
 		scrollToBottom();
 	});
 
@@ -78,7 +82,7 @@
 						size="icon"
 						variant="ghost"
 						class="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
-						on:click={() => handleCopyMessage(message, messageId)}
+						onclick={() => handleCopyMessage(message, messageId)}
 						title="Copy message"
 					>
 						{#if copiedMessageId === messageId}

@@ -23,7 +23,7 @@
 	});
 </script>
 
-<div class="flex h-screen bg-background">
+<div class="flex h-screen bg-japanese-card paper-texture">
 	<!-- Sidebar -->
 	<Sidebar bind:open={$sidebarOpen} />
 	

@@ -50,7 +50,7 @@
 						placeholder="Enter authorization code"
 						bind:value={authCode}
 						onkeydown={handleKeyDown}
-						error={$authState.error}
+						error={$authState.error || undefined}
 						class="pl-10"
 						disabled={isValidating}
 						autofocus

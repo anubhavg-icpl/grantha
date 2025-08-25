@@ -271,7 +271,8 @@
 							type="number"
 							min="10"
 							max="300"
-							bind:value={settings.apiTimeout}
+							value={settings.apiTimeout.toString()}
+							oninput={(e) => settings.apiTimeout = Number((e.target as HTMLInputElement).value)}
 							class="w-32"
 						/>
 					</div>
@@ -348,7 +349,7 @@
 						class="w-full"
 						disabled={!hasChanges || isSaving}
 						loading={isSaving}
-						on:click={saveSettings}
+						onclick={saveSettings}
 					>
 						<Save class="mr-2 h-4 w-4" />
 						Save Changes
@@ -358,7 +359,7 @@
 						variant="outline"
 						class="w-full"
 						disabled={!hasChanges}
-						on:click={resetSettings}
+						onclick={resetSettings}
 					>
 						<RotateCcw class="mr-2 h-4 w-4" />
 						Reset Changes
@@ -367,7 +368,7 @@
 					<Button
 						variant="destructive"
 						class="w-full"
-						on:click={resetToDefaults}
+						onclick={resetToDefaults}
 					>
 						Reset to Defaults
 					</Button>

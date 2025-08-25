@@ -2,8 +2,9 @@
 	import { page } from '$app/stores';
 	import { authActions } from '$stores/auth';
 	import Button from '../ui/button.svelte';
-	import { Menu, Sun, Moon, LogOut, User, Settings } from 'lucide-svelte';
-	import { writable, type Writable } from 'svelte/store';
+	import ThemeToggle from '../ui/theme-toggle.svelte';
+	import { Menu, LogOut, User, Settings } from 'lucide-svelte';
+	import { type Writable } from 'svelte/store';
 
 	interface Props {
 		sidebarOpen: Writable<boolean>;
@@ -12,17 +13,7 @@
 
 	let { sidebarOpen, onToggleSidebar }: Props = $props();
 
-	const theme = writable<'light' | 'dark'>('light');
 	let showUserMenu = $state(false);
-
-	function toggleTheme() {
-		theme.update(t => {
-			const newTheme = t === 'light' ? 'dark' : 'light';
-			document.documentElement.classList.toggle('dark', newTheme === 'dark');
-			localStorage.setItem('grantha-theme', newTheme);
-			return newTheme;
-		});
-	}
 
 	function toggleSidebar() {
 		sidebarOpen.update(open => !open);
@@ -31,13 +22,6 @@
 
 	function handleLogout() {
 		authActions.logout();
-	}
-
-	// Load theme from localStorage
-	if (typeof window !== 'undefined') {
-		const savedTheme = localStorage.getItem('grantha-theme') as 'light' | 'dark' || 'light';
-		theme.set(savedTheme);
-		document.documentElement.classList.toggle('dark', savedTheme === 'dark');
 	}
 
 	// Get page title from route
@@ -62,7 +46,7 @@
 	}
 </script>
 
-<header class="flex h-16 items-center justify-between border-b border-border bg-background px-4">
+<header class="flex h-16 items-center justify-between border-b border-japanese-border bg-japanese-card shadow-custom px-4">
 	<!-- Left side -->
 	<div class="flex items-center space-x-4">
 		<Button
@@ -75,8 +59,8 @@
 		</Button>
 		
 		<div>
-			<h1 class="text-lg font-semibold text-foreground">{pageTitle}</h1>
-			<p class="text-sm text-muted-foreground">
+			<h1 class="text-lg font-semibold text-foreground font-serif">{pageTitle}</h1>
+			<p class="text-sm text-japanese-muted">
 				{new Date().toLocaleDateString('en-US', { 
 					weekday: 'long', 
 					year: 'numeric', 
@@ -90,18 +74,7 @@
 	<!-- Right side -->
 	<div class="flex items-center space-x-2">
 		<!-- Theme toggle -->
-		<Button
-			variant="ghost"
-			size="icon"
-			onclick={toggleTheme}
-			title="Toggle theme"
-		>
-			{#if $theme === 'light'}
-				<Moon class="h-4 w-4" />
-			{:else}
-				<Sun class="h-4 w-4" />
-			{/if}
-		</Button>
+		<ThemeToggle />
 
 		<!-- User menu -->
 		<div class="relative">
@@ -116,23 +89,23 @@
 
 			{#if showUserMenu}
 				<div 
-					class="absolute right-0 mt-2 w-48 rounded-md border border-border bg-popover py-1 shadow-md"
+					class="absolute right-0 mt-2 w-48 rounded-md border border-japanese-border bg-japanese-card py-1 shadow-custom"
 					role="menu"
 				>
 					<a
 						href="/settings"
-						class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-accent"
+						class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-japanese-primary/10"
 						onclick={() => showUserMenu = false}
 					>
 						<Settings class="mr-3 h-4 w-4" />
 						Settings
 					</a>
 					
-					<hr class="my-1 border-border" />
+					<hr class="my-1 border-japanese-border" />
 					
 					<button
 						type="button"
-						class="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-accent"
+						class="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-japanese-primary/10"
 						onclick={handleLogout}
 					>
 						<LogOut class="mr-3 h-4 w-4" />

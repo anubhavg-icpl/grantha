@@ -18,7 +18,7 @@
 
 	let { 
 		options = [], 
-		value = '', 
+		value = $bindable(''), 
 		placeholder = 'Select an option...',
 		class: className = '',
 		...props 

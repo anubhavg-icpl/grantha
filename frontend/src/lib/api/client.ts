@@ -11,7 +11,7 @@ import type {
   APIError 
 } from '../types/api.js';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = 'http://localhost:8001';
 
 class APIClient {
   private baseURL: string;
@@ -63,110 +63,6 @@ class APIClient {
   }
 
   // Authentication methods
-  async login(credentials: AuthRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-
-    this.token = response.access_token;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('grantha_auth_token', response.access_token);
-    }
-
-    return response;
-  }
-
-  async register(credentials: AuthRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    });
-
-    this.token = response.access_token;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('grantha_auth_token', response.access_token);
-    }
-
-    return response;
-  }
-
-  async logout(): Promise<void> {
-    await this.request('/auth/logout', { method: 'POST' });
-    this.token = null;
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('grantha_auth_token');
-    }
-  }
-
-  // Chat methods
-  async getChatSessions(): Promise<ChatSession[]> {
-    return this.request<ChatSession[]>('/chat/sessions');
-  }
-
-  async createChatSession(title?: string): Promise<ChatSession> {
-    return this.request<ChatSession>('/chat/sessions', {
-      method: 'POST',
-      body: JSON.stringify({ title }),
-    });
-  }
-
-  async getChatMessages(sessionId: string): Promise<ChatMessage[]> {
-    return this.request<ChatMessage[]>(`/chat/sessions/${sessionId}/messages`);
-  }
-
-  async sendChatMessage(sessionId: string, content: string): Promise<ChatMessage> {
-    return this.request<ChatMessage>(`/chat/sessions/${sessionId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ content }),
-    });
-  }
-
-  // Models methods
-  async getModels(): Promise<Model[]> {
-    return this.request<Model[]>('/models');
-  }
-
-  async getModel(modelId: string): Promise<Model> {
-    return this.request<Model>(`/models/${modelId}`);
-  }
-
-  // Wiki methods
-  async getWikiEntries(): Promise<WikiEntry[]> {
-    return this.request<WikiEntry[]>('/wiki');
-  }
-
-  async createWikiEntry(entry: Omit<WikiEntry, 'id' | 'created_at' | 'updated_at'>): Promise<WikiEntry> {
-    return this.request<WikiEntry>('/wiki', {
-      method: 'POST',
-      body: JSON.stringify(entry),
-    });
-  }
-
-  async updateWikiEntry(id: string, entry: Partial<WikiEntry>): Promise<WikiEntry> {
-    return this.request<WikiEntry>(`/wiki/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(entry),
-    });
-  }
-
-  async deleteWikiEntry(id: string): Promise<void> {
-    await this.request(`/wiki/${id}`, { method: 'DELETE' });
-  }
-
-  // Research methods
-  async submitResearchQuery(query: ResearchQuery): Promise<ResearchResult> {
-    return this.request<ResearchResult>('/research/query', {
-      method: 'POST',
-      body: JSON.stringify(query),
-    });
-  }
-
-  async getResearchHistory(): Promise<ResearchResult[]> {
-    return this.request<ResearchResult[]>('/research/history');
-  }
-
-  // Additional auth methods
   async getAuthStatus(): Promise<{ auth_required: boolean }> {
     return this.request<{ auth_required: boolean }>('/auth/status');
   }
@@ -178,37 +74,195 @@ class APIClient {
     });
   }
 
-  // Model configuration methods
-  async getModelConfig(): Promise<any> {
-    return this.request('/models/config');
+  async getLanguageConfig(): Promise<any> {
+    return this.request('/auth/lang/config');
   }
 
-  // Chat completion method
-  async chatCompletion(request: any): Promise<any> {
+  // Legacy methods for compatibility - implement as needed
+  async login(credentials: AuthRequest): Promise<AuthResponse> {
+    // Note: Backend doesn't have login endpoint, implement based on auth flow
+    throw new Error('Login endpoint not implemented in backend API');
+  }
+
+  async register(credentials: AuthRequest): Promise<AuthResponse> {
+    // Note: Backend doesn't have register endpoint, implement based on auth flow
+    throw new Error('Register endpoint not implemented in backend API');
+  }
+
+  async logout(): Promise<void> {
+    this.token = null;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('grantha_auth_token');
+    }
+  }
+
+  // Chat methods - Updated to match backend API
+  async chatCompletion(request: {
+    messages: any[];
+    model?: string;
+    provider?: string;
+    stream?: boolean;
+    temperature?: number;
+    max_tokens?: number;
+  }): Promise<any> {
     return this.request('/chat/completion', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  // Simple chat methods
-  async simpleChat(request: any): Promise<any> {
+  // Legacy methods for compatibility - not implemented in backend
+  async getChatSessions(): Promise<ChatSession[]> {
+    throw new Error('Chat sessions endpoint not implemented in backend API');
+  }
+
+  async createChatSession(title?: string): Promise<ChatSession> {
+    throw new Error('Create chat session endpoint not implemented in backend API');
+  }
+
+  async getChatMessages(sessionId: string): Promise<ChatMessage[]> {
+    throw new Error('Chat messages endpoint not implemented in backend API');
+  }
+
+  async sendChatMessage(sessionId: string, content: string): Promise<ChatMessage> {
+    throw new Error('Send chat message endpoint not implemented in backend API');
+  }
+
+  // Models methods - Updated to match backend API
+  async getModelConfig(): Promise<any> {
+    return this.request('/models/config');
+  }
+
+  // Legacy model methods - not implemented in backend
+  async getModels(): Promise<Model[]> {
+    throw new Error('Individual models endpoint not implemented in backend API. Use getModelConfig() instead.');
+  }
+
+  async getModel(modelId: string): Promise<Model> {
+    throw new Error('Single model endpoint not implemented in backend API. Use getModelConfig() instead.');
+  }
+
+  // Wiki methods - Updated to match backend API
+  async generateWiki(request: {
+    repo_url: string;
+    language?: string;
+    provider?: string;
+    model?: string;
+    token?: string;
+    repo_type?: string;
+  }): Promise<any> {
+    return this.request('/wiki/generate', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async saveWikiCache(request: {
+    repo: any;
+    language: string;
+    wiki_structure: any;
+    generated_pages: Record<string, any>;
+    provider: string;
+    model: string;
+  }): Promise<any> {
+    return this.request('/wiki/cache', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async exportWiki(request: {
+    repo_url: string;
+    pages: any[];
+    format: 'markdown' | 'json';
+  }): Promise<any> {
+    return this.request('/wiki/export', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Legacy wiki methods - not implemented in backend
+  async getWikiEntries(): Promise<WikiEntry[]> {
+    throw new Error('Wiki entries list endpoint not implemented in backend API. Use generateWiki() instead.');
+  }
+
+  async createWikiEntry(entry: Omit<WikiEntry, 'id' | 'created_at' | 'updated_at'>): Promise<WikiEntry> {
+    throw new Error('Create wiki entry endpoint not implemented in backend API. Use generateWiki() instead.');
+  }
+
+  async updateWikiEntry(id: string, entry: Partial<WikiEntry>): Promise<WikiEntry> {
+    throw new Error('Update wiki entry endpoint not implemented in backend API.');
+  }
+
+  async deleteWikiEntry(id: string): Promise<void> {
+    throw new Error('Delete wiki entry endpoint not implemented in backend API.');
+  }
+
+  // Research methods - Updated to match backend API
+  async deepResearch(request: {
+    query: string;
+    repo_url: string;
+    language?: string;
+    provider?: string;
+    model?: string;
+    token?: string;
+    repo_type?: string;
+  }): Promise<any> {
+    return this.request('/research/deep', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Legacy research methods - not implemented in backend
+  async submitResearchQuery(query: ResearchQuery): Promise<ResearchResult> {
+    throw new Error('Research query endpoint not implemented in backend API. Use deepResearch() instead.');
+  }
+
+  async getResearchHistory(): Promise<ResearchResult[]> {
+    throw new Error('Research history endpoint not implemented in backend API.');
+  }
+
+  // Simple methods - Updated to match backend API
+  async simpleChat(request: {
+    user_query: string;
+    repo_url?: string;
+    provider?: string;
+    model?: string;
+    language?: string;
+    token?: string;
+    repo_type?: string;
+  }): Promise<any> {
     return this.request('/simple/chat', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  async simpleRAG(request: any): Promise<any> {
+  async simpleRAG(request: {
+    query: string;
+    repo_url: string;
+    provider?: string;
+    model?: string;
+    language?: string;
+    token?: string;
+    repo_type?: string;
+    k?: number;
+  }): Promise<any> {
     return this.request('/simple/rag', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  // Health check
-  async healthCheck(): Promise<{ status: string }> {
-    return this.request<{ status: string }>('/health');
+  // Root and health endpoints
+  async root(): Promise<any> {
+    return this.request('/');
+  }
+
+  async healthCheck(): Promise<any> {
+    return this.request('/health');
   }
 }
 

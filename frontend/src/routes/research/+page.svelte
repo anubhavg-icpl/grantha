@@ -159,7 +159,7 @@
 						disabled={isLoading}
 					/>
 					<Button 
-						on:click={startResearch}
+						onclick={startResearch}
 						disabled={!query.trim() || isLoading}
 						class="px-6"
 					>
@@ -219,7 +219,7 @@
 							<Button
 								variant="outline"
 								size="sm"
-								on:click={() => exportResults(research)}
+								onclick={() => exportResults(research)}
 							>
 								<Download class="w-4 h-4 mr-2" />
 								Export

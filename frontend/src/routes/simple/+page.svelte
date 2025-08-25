@@ -47,11 +47,11 @@
 
 		try {
 			const request: SimpleRequest = {
-				message: chatQuery.trim()
+				user_query: chatQuery.trim()
 			};
 
 			const response = await apiClient.simpleChat(request);
-			result.response = response.response || response.message || 'No response received';
+			result.response = response.message || response.response || 'No response received';
 		} catch (error) {
 			result.error = error instanceof Error ? error.message : 'Chat request failed';
 		} finally {
@@ -78,11 +78,11 @@
 		try {
 			const request: RAGRequest = {
 				query: ragQuery.trim(),
-				context: ragContext.trim() || undefined
+				repo_url: ragContext.trim() || 'https://github.com/example/repo' // Default repo URL since it's required
 			};
 
 			const response = await apiClient.simpleRAG(request);
-			result.response = response.response || response.answer || 'No response received';
+			result.response = response.answer || response.response || 'No response received';
 		} catch (error) {
 			result.error = error instanceof Error ? error.message : 'RAG request failed';
 		} finally {
@@ -183,14 +183,14 @@
 						id="chat-input"
 						bind:value={chatQuery}
 						placeholder="Ask anything..."
-						on:keypress={handleChatKeyPress}
+						onkeypress={handleChatKeyPress}
 						disabled={isLoadingChat}
 						class="w-full"
 					/>
 				</div>
 				
 				<Button 
-					on:click={performSimpleChat}
+					onclick={performSimpleChat}
 					disabled={!chatQuery.trim() || isLoadingChat}
 					class="w-full"
 				>
@@ -233,14 +233,14 @@
 						id="rag-query"
 						bind:value={ragQuery}
 						placeholder="What would you like to know?"
-						on:keypress={handleRagKeyPress}
+						onkeypress={handleRagKeyPress}
 						disabled={isLoadingRag}
 						class="w-full"
 					/>
 				</div>
 				
 				<Button 
-					on:click={performRAG}
+					onclick={performRAG}
 					disabled={!ragQuery.trim() || isLoadingRag}
 					class="w-full"
 				>
@@ -260,7 +260,7 @@
 		<div class="space-y-4">
 			<div class="flex items-center justify-between">
 				<h2 class="text-xl font-semibold text-foreground">Results</h2>
-				<Button variant="outline" size="sm" on:click={clearAll}>
+				<Button variant="outline" size="sm" onclick={clearAll}>
 					<Trash2 class="w-4 h-4 mr-2" />
 					Clear All
 				</Button>
@@ -289,14 +289,14 @@
 									<Button
 										variant="ghost"
 										size="sm"
-										on:click={() => copyToClipboard(result.response || '')}
+										onclick={() => copyToClipboard(result.response || '')}
 									>
 										<Copy class="w-4 h-4" />
 									</Button>
 									<Button
 										variant="ghost"
 										size="sm"
-										on:click={() => downloadResult(result)}
+										onclick={() => downloadResult(result)}
 									>
 										<Download class="w-4 h-4" />
 									</Button>
@@ -304,7 +304,7 @@
 								<Button
 									variant="ghost"
 									size="sm"
-									on:click={() => deleteResult(result.id)}
+									onclick={() => deleteResult(result.id)}
 								>
 									<Trash2 class="w-4 h-4" />
 								</Button>

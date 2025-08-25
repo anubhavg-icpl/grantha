@@ -145,23 +145,32 @@ export interface WikiExportRequest {
 
 export interface DeepResearchRequest {
 	query: string;
-	depth?: 'basic' | 'comprehensive' | 'deep';
-	include_sources?: boolean;
+	repo_url: string;
+	language?: string;
 	provider?: string;
 	model?: string;
+	token?: string;
+	repo_type?: string;
 }
 
 export interface SimpleRequest {
-	message: string;
+	user_query: string;
+	repo_url?: string;
 	provider?: string;
 	model?: string;
+	language?: string;
+	token?: string;
+	repo_type?: string;
 }
 
 export interface RAGRequest {
 	query: string;
-	context?: string;
+	repo_url: string;
 	provider?: string;
 	model?: string;
+	language?: string;
+	token?: string;
+	repo_type?: string;
 	k?: number;
 }
 

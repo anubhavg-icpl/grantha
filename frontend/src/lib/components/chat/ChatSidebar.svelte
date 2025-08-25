@@ -60,8 +60,8 @@
 				)}
 				role="button"
 				tabindex="0"
-				on:click={() => selectConversation(conversation.id)}
-				on:keydown={(e) => e.key === 'Enter' && selectConversation(conversation.id)}
+				onclick={() => selectConversation(conversation.id)}
+				onkeydown={(e) => e.key === 'Enter' && selectConversation(conversation.id)}
 			>
 				<div class="flex items-start justify-between">
 					<div class="flex-1 min-w-0">
@@ -69,8 +69,8 @@
 							<input
 								type="text"
 								bind:value={editTitle}
-								on:keydown={handleKeydown}
-								on:blur={saveEdit}
+								onkeydown={handleKeydown}
+								onblur={saveEdit}
 								class="w-full bg-background border border-border rounded px-2 py-1 text-sm"
 								autofocus
 							/>
@@ -98,7 +98,7 @@
 								size="icon"
 								variant="ghost"
 								class="h-6 w-6"
-								on:click={(e) => {
+								onclick={(e) => {
 									e.stopPropagation();
 									startEdit(conversation);
 								}}
@@ -110,7 +110,7 @@
 								size="icon"
 								variant="ghost"
 								class="h-6 w-6 text-destructive hover:text-destructive"
-								on:click={(e) => deleteConversation(conversation.id, e)}
+								onclick={(e) => deleteConversation(conversation.id, e)}
 								title="Delete"
 							>
 								<Trash2 class="h-3 w-3" />

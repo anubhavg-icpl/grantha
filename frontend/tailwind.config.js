@@ -15,6 +15,7 @@ const config = {
 		},
 		extend: {
 			colors: {
+				// Support for both HSL (existing components) and hex (new Japanese theme)
 				border: "hsl(var(--border) / <alpha-value>)",
 				input: "hsl(var(--input) / <alpha-value>)",
 				ring: "hsl(var(--ring) / <alpha-value>)",
@@ -47,6 +48,17 @@ const config = {
 				card: {
 					DEFAULT: "hsl(var(--card) / <alpha-value>)",
 					foreground: "hsl(var(--card-foreground) / <alpha-value>)"
+				},
+				// Japanese aesthetic colors (using CSS custom properties)
+				'japanese': {
+					'primary': 'var(--accent-primary)',
+					'secondary': 'var(--accent-secondary)',
+					'highlight': 'var(--highlight)',
+					'muted': 'var(--muted-color)',
+					'link': 'var(--link-color)',
+					'card': 'var(--card-bg)',
+					'input': 'var(--input-bg)',
+					'border': 'var(--border-color)'
 				}
 			},
 			borderRadius: {
@@ -55,7 +67,12 @@ const config = {
 				sm: "calc(var(--radius) - 4px)"
 			},
 			fontFamily: {
-				sans: [...fontFamily.sans]
+				sans: ['var(--font-geist-sans)', ...fontFamily.sans],
+				serif: ['var(--font-serif-jp)', ...fontFamily.serif],
+				mono: ['var(--font-geist-mono)', ...fontFamily.mono]
+			},
+			boxShadow: {
+				'custom': '0 4px 8px -2px var(--shadow-color)'
 			}
 		}
 	}

@@ -42,7 +42,7 @@ export const currentProvider = derived(
 	[modelsState, availableProviders],
 	([$modelsState, $availableProviders]) => {
 		if (!$modelsState.selectedProvider) return null;
-		return $availableProviders.find(p => p.id === $modelsState.selectedProvider) || null;
+		return $availableProviders.find((p: Provider) => p.id === $modelsState.selectedProvider) || null;
 	}
 );
 
@@ -55,7 +55,7 @@ export const currentModel = derived(
 	[modelsState, availableModels],
 	([$modelsState, $availableModels]) => {
 		if (!$modelsState.selectedModel) return null;
-		return $availableModels.find(m => m.id === $modelsState.selectedModel) || null;
+		return $availableModels.find((m: Model) => m.id === $modelsState.selectedModel) || null;
 	}
 );
 
@@ -93,7 +93,7 @@ export const modelsActions = {
 			modelsState.update(state => {
 				// Auto-select default provider and first model if none selected
 				const selectedProvider = state.selectedProvider || config.defaultProvider;
-				const provider = config.providers.find(p => p.id === selectedProvider);
+				const provider = config.providers.find((p: Provider) => p.id === selectedProvider);
 				const selectedModel = state.selectedModel || provider?.models[0]?.id || null;
 
 				return {
@@ -123,7 +123,7 @@ export const modelsActions = {
 	// Select provider
 	setProvider(providerId: string): void {
 		modelsState.update(state => {
-			const provider = state.config?.providers.find(p => p.id === providerId);
+			const provider = state.config?.providers.find((p: Provider) => p.id === providerId);
 			const firstModel = provider?.models[0]?.id || null;
 			
 			return {

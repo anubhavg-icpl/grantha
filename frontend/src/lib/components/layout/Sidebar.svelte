@@ -40,17 +40,17 @@
 
 <div 
 	class={cn(
-		'flex flex-col bg-card border-r border-border transition-all duration-300 ease-in-out',
+		'flex flex-col bg-japanese-card border-r border-japanese-border transition-all duration-300 ease-in-out shadow-custom',
 		open ? 'w-64' : 'w-16',
 		'fixed inset-y-0 left-0 z-50 lg:relative lg:z-0'
 	)}
 >
 	<!-- Logo -->
-	<div class="flex h-16 items-center justify-center border-b border-border px-4">
+	<div class="flex h-16 items-center justify-center border-b border-japanese-border px-4">
 		{#if open}
-			<h1 class="text-xl font-bold text-foreground">Grantha</h1>
+			<h1 class="text-xl font-bold text-japanese-primary font-serif">Grantha</h1>
 		{:else}
-			<div class="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">
+			<div class="flex h-8 w-8 items-center justify-center rounded bg-japanese-primary text-white shadow-custom">
 				G
 			</div>
 		{/if}
@@ -64,8 +64,8 @@
 				class={cn(
 					'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 					isActive(item.href) 
-						? 'bg-accent text-accent-foreground' 
-						: 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+						? 'bg-japanese-primary/10 text-japanese-primary border border-japanese-primary/20' 
+						: 'text-japanese-muted hover:bg-japanese-primary/5 hover:text-japanese-primary',
 					!open && 'justify-center'
 				)}
 				title={!open ? item.name : undefined}
@@ -79,11 +79,11 @@
 	</nav>
 
 	<!-- Settings -->
-	<div class="border-t border-border p-4">
+	<div class="border-t border-japanese-border p-4">
 		<a
 			href="/settings"
 			class={cn(
-				'flex items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
+				'flex items-center rounded-lg px-3 py-2 text-sm font-medium text-japanese-muted transition-colors hover:bg-japanese-primary/5 hover:text-japanese-primary',
 				!open && 'justify-center'
 			)}
 			title={!open ? 'Settings' : undefined}

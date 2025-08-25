@@ -74,7 +74,7 @@
 				variant="ghost"
 				size="sm"
 				class="mt-2 text-destructive hover:text-destructive"
-				on:click={chatActions.clearError}
+				onclick={chatActions.clearError}
 			>
 				Dismiss
 			</Button>
@@ -86,8 +86,8 @@
 		<textarea
 			bind:this={textareaElement}
 			bind:value={message}
-			on:keydown={handleKeyDown}
-			on:input={handleInput}
+			onkeydown={handleKeyDown}
+			oninput={handleInput}
 			{placeholder}
 			{disabled}
 			rows="1"
@@ -114,7 +114,7 @@
 					size="icon"
 					variant="destructive"
 					class="h-8 w-8"
-					on:click={stopStreaming}
+					onclick={stopStreaming}
 					title="Stop generation"
 				>
 					<Square class="h-4 w-4" />
@@ -126,7 +126,7 @@
 					class="h-8 w-8"
 					{disabled}
 					loading={loading && !$chatState.isStreaming}
-					on:click={handleSubmit}
+					onclick={handleSubmit}
 					title="Send message"
 				>
 					<Send class="h-4 w-4" />

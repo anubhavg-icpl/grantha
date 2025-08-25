@@ -100,11 +100,11 @@
 	<title>Dashboard - Grantha</title>
 </svelte:head>
 
-<div class="space-y-12">
+<div class="space-y-12 paper-texture min-h-screen">
 	<!-- Hero Section -->
 	<div class="relative">
-		<!-- Background gradient -->
-		<div class="absolute inset-0 gradient-bg rounded-3xl"></div>
+		<!-- Background gradient with Japanese aesthetic -->
+		<div class="absolute inset-0 bg-gradient-to-br from-japanese-primary/5 to-japanese-secondary/10 rounded-3xl"></div>
 		<div class="relative text-center py-16 px-8">
 			<div class="flex items-center justify-center mb-6">
 				<Badge variant="secondary" class="px-4 py-2">
@@ -112,13 +112,13 @@
 					AI-Powered Platform
 				</Badge>
 			</div>
-			<h1 class="text-5xl font-bold text-foreground mb-6">
-				Welcome to <span class="text-primary">Grantha</span>
+			<h1 class="text-5xl font-bold text-foreground mb-6 font-serif">
+				Welcome to <span class="text-japanese-primary">Grantha</span>
 			</h1>
-			<p class="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+			<p class="text-xl text-japanese-muted max-w-3xl mx-auto mb-8 leading-relaxed">
 				Your comprehensive AI platform for intelligent documentation, interactive chat, 
-				deep research, and sophisticated agent coordination. Streamline your workflow with 
-				cutting-edge AI technology.
+				deep research, and sophisticated agent coordination. Experience the harmony of 
+				cutting-edge technology with thoughtful design.
 			</p>
 			<div class="flex flex-col sm:flex-row gap-4 justify-center">
 				<Button size="lg" class="text-lg px-8" onclick={() => window.location.href='/chat'}>
@@ -190,25 +190,25 @@
 					href={card.href}
 					class="group block"
 				>
-					<Card class="p-6 h-full transition-all hover:shadow-lg hover:scale-[1.02] border-2 border-transparent hover:border-primary/20">
+					<div class="card-japanese p-6 h-full shadow-custom border-2 border-transparent hover:border-japanese-primary/20 group-hover:scale-[1.02]">
 						<div class="flex items-center mb-4">
-							<div class="p-3 rounded-xl {card.color} text-white mr-4">
+							<div class="p-3 rounded-xl {card.color} text-white mr-4 shadow-custom">
 								<IconComponent class="h-6 w-6" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+								<h3 class="text-lg font-semibold text-foreground group-hover:text-japanese-primary transition-colors font-serif">
 									{card.title}
 								</h3>
 							</div>
 						</div>
-						<p class="text-muted-foreground text-sm mb-4">
+						<p class="text-japanese-muted text-sm mb-4 leading-relaxed">
 							{card.description}
 						</p>
-						<div class="flex items-center text-sm text-primary group-hover:translate-x-1 transition-transform">
+						<div class="flex items-center text-sm text-japanese-link group-hover:translate-x-1 transition-transform">
 							Learn more
 							<ArrowRight class="ml-1 h-4 w-4" />
 						</div>
-					</Card>
+					</div>
 				</a>
 			{/each}
 		</div>
@@ -216,84 +216,84 @@
 
 	<!-- Platform Highlights -->
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-		<Card class="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+		<div class="card-japanese p-8 bg-gradient-to-br from-japanese-primary/5 to-japanese-secondary/10 border-japanese-primary/20">
 			<div class="flex items-center mb-4">
-				<div class="p-3 rounded-full bg-blue-500">
+				<div class="p-3 rounded-full bg-japanese-primary shadow-custom">
 					<Cpu class="h-6 w-6 text-white" />
 				</div>
 				<div class="ml-4">
-					<h3 class="text-xl font-semibold text-blue-900 dark:text-blue-100">Multi-Provider AI</h3>
-					<p class="text-blue-600 dark:text-blue-300">Support for multiple AI providers and models</p>
+					<h3 class="text-xl font-semibold text-japanese-primary font-serif">Multi-Provider AI</h3>
+					<p class="text-japanese-muted">Support for multiple AI providers and models</p>
 				</div>
 			</div>
-			<ul class="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+			<ul class="space-y-2 text-sm text-japanese-muted">
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-primary rounded-full mr-2"></div>
 					OpenAI, Claude, Llama, and more
 				</li>
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-primary rounded-full mr-2"></div>
 					Custom model endpoints
 				</li>
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-primary rounded-full mr-2"></div>
 					Dynamic model switching
 				</li>
 			</ul>
-		</Card>
+		</div>
 
-		<Card class="p-8 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
+		<div class="card-japanese p-8 bg-gradient-to-br from-japanese-highlight/5 to-japanese-secondary/10 border-japanese-highlight/20">
 			<div class="flex items-center mb-4">
-				<div class="p-3 rounded-full bg-green-500">
+				<div class="p-3 rounded-full bg-japanese-highlight shadow-custom">
 					<Shield class="h-6 w-6 text-white" />
 				</div>
 				<div class="ml-4">
-					<h3 class="text-xl font-semibold text-green-900 dark:text-green-100">Enterprise Ready</h3>
-					<p class="text-green-600 dark:text-green-300">Built for security and scalability</p>
+					<h3 class="text-xl font-semibold text-japanese-highlight font-serif">Enterprise Ready</h3>
+					<p class="text-japanese-muted">Built for security and scalability</p>
 				</div>
 			</div>
-			<ul class="space-y-2 text-sm text-green-800 dark:text-green-200">
+			<ul class="space-y-2 text-sm text-japanese-muted">
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-highlight rounded-full mr-2"></div>
 					End-to-end encryption
 				</li>
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-highlight rounded-full mr-2"></div>
 					Role-based access control
 				</li>
 				<li class="flex items-center">
-					<div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+					<div class="w-2 h-2 bg-japanese-highlight rounded-full mr-2"></div>
 					Audit logging & compliance
 				</li>
 			</ul>
-		</Card>
+		</div>
 	</div>
 
 	<!-- Quick Actions -->
-	<Card class="p-6">
+	<div class="card-japanese p-8 shadow-custom">
 		<div class="text-center mb-6">
-			<h3 class="text-xl font-semibold text-foreground mb-2">Quick Actions</h3>
-			<p class="text-muted-foreground">Jump into any feature to get started immediately</p>
+			<h3 class="text-xl font-semibold text-foreground mb-2 font-serif">Quick Actions</h3>
+			<p class="text-japanese-muted">Jump into any feature to get started immediately</p>
 		</div>
 		<div class="flex flex-wrap justify-center gap-3">
-			<Button size="lg" class="flex items-center" onclick={() => window.location.href='/chat'}>
+			<button class="btn-japanese flex items-center text-lg px-6 py-3" onclick={() => window.location.href='/chat'}>
 				<MessageSquare class="mr-2 h-5 w-5" />
 				New Chat
-			</Button>
-			<Button variant="outline" size="lg" class="flex items-center" onclick={() => window.location.href='/wiki'}>
+			</button>
+			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/wiki'}>
 				<BookOpen class="mr-2 h-5 w-5" />
 				Generate Wiki
-			</Button>
-			<Button variant="outline" size="lg" class="flex items-center" onclick={() => window.location.href='/research'}>
+			</button>
+			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/research'}>
 				<Search class="mr-2 h-5 w-5" />
 				Start Research
-			</Button>
-			<Button variant="outline" size="lg" class="flex items-center" onclick={() => window.location.href='/models'}>
+			</button>
+			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/models'}>
 				<Brain class="mr-2 h-5 w-5" />
 				Configure Models
-			</Button>
+			</button>
 		</div>
-	</Card>
+	</div>
 
 	<!-- Status -->
 	{#if $modelsState.isLoading}

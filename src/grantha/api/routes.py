@@ -135,16 +135,35 @@ async def deep_research(request: DeepResearchRequest):
     raise HTTPException(status_code=501, detail="Not implemented yet")
 
 
-# Simple routes (placeholder)
+# Simple routes
 @simple_router.post("/chat")
 async def simple_chat(request: SimpleRequest):
     """Handle simple chat requests."""
-    # This will need to be implemented with the actual simple chat logic
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    try:
+        # For now, return a mock response to test the API integration
+        return {
+            "message": f"Echo: {request.user_query}",
+            "provider": request.provider or "mock",
+            "model": request.model or "mock-model",
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error in simple chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @simple_router.post("/rag")
 async def simple_rag(request: RAGRequest):
     """Handle RAG (Retrieval-Augmented Generation) requests."""
-    # This will need to be implemented with the actual RAG logic
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    try:
+        # For now, return a mock response to test the API integration
+        return {
+            "answer": f"RAG Response for query: '{request.query}' from repo: {request.repo_url}",
+            "sources": ["mock_source_1.py", "mock_source_2.md"],
+            "provider": request.provider or "mock",
+            "model": request.model or "mock-model",
+            "status": "success"
+        }
+    except Exception as e:
+        logger.error(f"Error in simple RAG: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
