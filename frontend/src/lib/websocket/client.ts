@@ -27,7 +27,7 @@ class WebSocketClient {
   public error = writable<string | null>(null);
 
   constructor(config: WebSocketClientConfig = {}) {
-    this.url = config.url || 'ws://localhost:8001/ws';
+    this.url = config.url || 'ws://localhost:8000/ws';
     this.reconnectInterval = config.reconnectInterval || 3000;
     this.maxReconnectAttempts = config.maxReconnectAttempts || 5;
     this.heartbeatInterval = config.heartbeatInterval || 30000;
@@ -55,7 +55,7 @@ class WebSocketClient {
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
         this.messages.update(messages => [...messages, message]);
-        
+
         // Handle specific message types
         if (message.type === 'error') {
           this.error.set(message.data.message || 'Unknown WebSocket error');
@@ -94,7 +94,7 @@ class WebSocketClient {
       this.ws.close(1000, 'Client disconnect');
       this.ws = null;
     }
-    
+
     this.status.set('disconnected');
   }
 
@@ -163,7 +163,7 @@ class WebSocketClient {
   private scheduleReconnect(): void {
     this.reconnectAttempts++;
     console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-    
+
     this.reconnectTimer = setTimeout(() => {
       this.connect();
     }, this.reconnectInterval * this.reconnectAttempts);
@@ -187,9 +187,9 @@ export const wsClient = new WebSocketClient();
 
 // Utility function to initialize WebSocket with auth token
 export async function initializeWebSocket(): Promise<void> {
-  const token = typeof localStorage !== 'undefined' ? 
+  const token = typeof localStorage !== 'undefined' ?
     localStorage.getItem('grantha_auth_token') : null;
-  
+
   if (token) {
     wsClient.connect(token);
   }
