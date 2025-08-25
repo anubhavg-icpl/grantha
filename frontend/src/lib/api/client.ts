@@ -105,10 +105,21 @@ class APIClient {
     temperature?: number;
     max_tokens?: number;
   }): Promise<any> {
-    return this.request('/chat/completion', {
+    const response = await this.request('/chat/completion', {
       method: 'POST',
       body: JSON.stringify(request),
     });
+    
+    // Ensure consistent response format
+    const typedResponse = response as any;
+    return {
+      content: typedResponse.content || typedResponse.message || 'No response received',
+      model: typedResponse.model || 'unknown',
+      provider: typedResponse.provider || 'unknown',
+      role: typedResponse.role || 'assistant',
+      usage: typedResponse.usage,
+      finish_reason: typedResponse.finish_reason
+    };
   }
 
   // Legacy methods for compatibility - not implemented in backend
@@ -151,10 +162,21 @@ class APIClient {
     token?: string;
     repo_type?: string;
   }): Promise<any> {
-    return this.request('/wiki/generate', {
+    const response = await this.request('/wiki/generate', {
       method: 'POST',
       body: JSON.stringify(request),
     });
+    
+    // Normalize response format
+    const typedResponse = response as any;
+    return {
+      status: typedResponse.status || 'success',
+      wiki_structure: typedResponse.wiki_structure || typedResponse,
+      provider: typedResponse.provider,
+      model: typedResponse.model,
+      message: typedResponse.message,
+      error: typedResponse.error
+    };
   }
 
   async saveWikiCache(request: {
@@ -234,10 +256,20 @@ class APIClient {
     token?: string;
     repo_type?: string;
   }): Promise<any> {
-    return this.request('/simple/chat', {
+    const response = await this.request('/simple/chat', {
       method: 'POST',
       body: JSON.stringify(request),
     });
+    
+    // Normalize response format
+    const typedResponse = response as any;
+    return {
+      message: typedResponse.message || typedResponse.content || typedResponse.response || 'No response received',
+      provider: typedResponse.provider || 'unknown',
+      model: typedResponse.model || 'unknown',
+      status: typedResponse.status || 'success',
+      error: typedResponse.error
+    };
   }
 
   async simpleRAG(request: {

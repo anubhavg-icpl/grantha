@@ -45,6 +45,8 @@ export interface WikiStructureModel {
 	pages: WikiPage[];
 	sections?: WikiSection[];
 	rootSections?: string[];
+	repo_url?: string;
+	generated_at?: number;
 }
 
 export interface WikiCacheData {

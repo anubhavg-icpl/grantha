@@ -27,7 +27,7 @@ class WebSocketClient {
   public error = writable<string | null>(null);
 
   constructor(config: WebSocketClientConfig = {}) {
-    this.url = config.url || 'ws://localhost:8000/ws';
+    this.url = config.url || 'ws://localhost:8000/ws/chat';
     this.reconnectInterval = config.reconnectInterval || 3000;
     this.maxReconnectAttempts = config.maxReconnectAttempts || 5;
     this.heartbeatInterval = config.heartbeatInterval || 30000;
