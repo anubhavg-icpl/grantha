@@ -1,0 +1,156 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+	import { authActions } from '$stores/auth';
+	import Button from '../ui/button.svelte';
+	import { Menu, Sun, Moon, LogOut, User, Settings } from 'lucide-svelte';
+	import { writable, type Writable } from 'svelte/store';
+
+	interface Props {
+		sidebarOpen: Writable<boolean>;
+		onToggleSidebar?: () => void;
+	}
+
+	let { sidebarOpen, onToggleSidebar }: Props = $props();
+
+	const theme = writable<'light' | 'dark'>('light');
+	let showUserMenu = $state(false);
+
+	function toggleTheme() {
+		theme.update(t => {
+			const newTheme = t === 'light' ? 'dark' : 'light';
+			document.documentElement.classList.toggle('dark', newTheme === 'dark');
+			localStorage.setItem('grantha-theme', newTheme);
+			return newTheme;
+		});
+	}
+
+	function toggleSidebar() {
+		sidebarOpen.update(open => !open);
+		onToggleSidebar?.();
+	}
+
+	function handleLogout() {
+		authActions.logout();
+	}
+
+	// Load theme from localStorage
+	if (typeof window !== 'undefined') {
+		const savedTheme = localStorage.getItem('grantha-theme') as 'light' | 'dark' || 'light';
+		theme.set(savedTheme);
+		document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+	}
+
+	// Get page title from route
+	const pageTitle = $derived(getPageTitle($page.route?.id));
+
+	function getPageTitle(routeId: string | null): string {
+		if (!routeId) return 'Grantha';
+		
+		const titleMap: Record<string, string> = {
+			'/': 'Dashboard',
+			'/chat': 'Chat',
+			'/wiki': 'Wiki',
+			'/research': 'Research',
+			'/models': 'Models',
+			'/agents': 'Agents',
+			'/simple': 'Simple',
+			'/docs': 'Documentation',
+			'/settings': 'Settings'
+		};
+		
+		return titleMap[routeId] || 'Grantha';
+	}
+</script>
+
+<header class="flex h-16 items-center justify-between border-b border-border bg-background px-4">
+	<!-- Left side -->
+	<div class="flex items-center space-x-4">
+		<Button
+			variant="ghost"
+			size="icon"
+			onclick={toggleSidebar}
+			class="lg:hidden"
+		>
+			<Menu class="h-4 w-4" />
+		</Button>
+		
+		<div>
+			<h1 class="text-lg font-semibold text-foreground">{pageTitle}</h1>
+			<p class="text-sm text-muted-foreground">
+				{new Date().toLocaleDateString('en-US', { 
+					weekday: 'long', 
+					year: 'numeric', 
+					month: 'long', 
+					day: 'numeric' 
+				})}
+			</p>
+		</div>
+	</div>
+
+	<!-- Right side -->
+	<div class="flex items-center space-x-2">
+		<!-- Theme toggle -->
+		<Button
+			variant="ghost"
+			size="icon"
+			onclick={toggleTheme}
+			title="Toggle theme"
+		>
+			{#if $theme === 'light'}
+				<Moon class="h-4 w-4" />
+			{:else}
+				<Sun class="h-4 w-4" />
+			{/if}
+		</Button>
+
+		<!-- User menu -->
+		<div class="relative">
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => showUserMenu = !showUserMenu}
+				class="rounded-full"
+			>
+				<User class="h-4 w-4" />
+			</Button>
+
+			{#if showUserMenu}
+				<div 
+					class="absolute right-0 mt-2 w-48 rounded-md border border-border bg-popover py-1 shadow-md"
+					role="menu"
+				>
+					<a
+						href="/settings"
+						class="flex items-center px-4 py-2 text-sm text-foreground hover:bg-accent"
+						onclick={() => showUserMenu = false}
+					>
+						<Settings class="mr-3 h-4 w-4" />
+						Settings
+					</a>
+					
+					<hr class="my-1 border-border" />
+					
+					<button
+						type="button"
+						class="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-accent"
+						onclick={handleLogout}
+					>
+						<LogOut class="mr-3 h-4 w-4" />
+						Sign Out
+					</button>
+				</div>
+			{/if}
+		</div>
+	</div>
+</header>
+
+<!-- Click outside to close user menu -->
+{#if showUserMenu}
+	<div 
+		class="fixed inset-0 z-10"
+		onclick={() => showUserMenu = false}
+		role="button"
+		tabindex="0"
+		onkeydown={(e) => e.key === 'Escape' && (showUserMenu = false)}
+	></div>
+{/if}
