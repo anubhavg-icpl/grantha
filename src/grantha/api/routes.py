@@ -1,9 +1,11 @@
 """API routes for the Grantha platform."""
 
 import logging
+import os
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket
 from fastapi.responses import JSONResponse, StreamingResponse
 from typing import List, Optional, Dict, Any, Literal
+import google.generativeai as genai
 
 from ..models.api_models import (
     AuthorizationConfig,
@@ -20,6 +22,15 @@ from ..models.api_models import (
 from ..core.config import get_config, configs
 
 logger = logging.getLogger(__name__)
+
+# Initialize Gemini
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    gemini_model = genai.GenerativeModel('gemini-2.0-flash-exp')
+else:
+    gemini_model = None
+    logger.warning("Google API key not found. Chat functionality will be limited.")
 
 # Create routers
 auth_router = APIRouter()
@@ -140,13 +151,34 @@ async def deep_research(request: DeepResearchRequest):
 async def simple_chat(request: SimpleRequest):
     """Handle simple chat requests."""
     try:
-        # For now, return a mock response to test the API integration
-        return {
-            "message": f"Echo: {request.user_query}",
-            "provider": request.provider or "mock",
-            "model": request.model or "mock-model",
-            "status": "success"
-        }
+        # Use actual Gemini model if available
+        if gemini_model:
+            try:
+                response = gemini_model.generate_content(request.user_query)
+                return {
+                    "message": response.text,
+                    "provider": request.provider or "google",
+                    "model": request.model or "gemini-2.0-flash-exp",
+                    "status": "success"
+                }
+            except Exception as gemini_error:
+                logger.error(f"Gemini API error: {str(gemini_error)}")
+                # Fallback to echo mode if Gemini fails
+                return {
+                    "message": f"Echo (Gemini error): {request.user_query}",
+                    "provider": "fallback",
+                    "model": "echo",
+                    "status": "fallback",
+                    "error": str(gemini_error)
+                }
+        else:
+            # Fallback to echo mode if no API key
+            return {
+                "message": f"Echo (No API key): {request.user_query}",
+                "provider": "fallback", 
+                "model": "echo",
+                "status": "no_api_key"
+            }
     except Exception as e:
         logger.error(f"Error in simple chat: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
