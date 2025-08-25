@@ -1,0 +1,51 @@
+{
+  "name": "grantha",
+  "version": "1.0.0",
+  "description": "Advanced AI Platform for Documentation, Chat, and Research",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"pnpm:api\" \"pnpm:frontend\" --names \"API,Frontend\" --prefix-colors \"blue,green\"",
+    "api": "./run.sh api",
+    "frontend": "cd frontend && pnpm run dev",
+    "build": "./run.sh build",
+    "start": "pnpm run api",
+    "install:all": "./run.sh install",
+    "setup": "./run.sh setup",
+    "clean": "./run.sh clean",
+    "test": "./run.sh test",
+    "lint": "./run.sh lint",
+    "postinstall": "pnpm install --filter frontend"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "ai",
+    "documentation",
+    "chat",
+    "research",
+    "knowledge-management",
+    "fastapi",
+    "svelte",
+    "sveltekit"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anubhavg-icpl/grantha.git"
+  },
+  "author": "Grantha Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anubhavg-icpl/grantha/issues"
+  },
+  "homepage": "https://github.com/anubhavg-icpl/grantha#readme"
+}

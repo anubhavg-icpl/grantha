@@ -5,8 +5,19 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import List, Union, Dict, Any, Optional
-from dataclasses import dataclass
+from typing import List, Union, Dict, Any, Optional, Tuple
+from dataclasses import dataclass, field
+
+# Load environment variables from unified .env file
+try:
+    from dotenv import load_dotenv
+    # Load from project root .env file
+    env_path = Path(__file__).parent.parent.parent.parent / '.env'
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path, override=False)
+        logging.info(f"Loaded unified environment from {env_path}")
+except ImportError:
+    logging.warning("python-dotenv not installed, skipping .env loading")
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +34,69 @@ class Config:
     aws_secret_access_key: Optional[str] = None
     aws_region: Optional[str] = None
     aws_role_arn: Optional[str] = None
+    azure_openai_api_key: Optional[str] = None
+    azure_openai_endpoint: Optional[str] = None
+    azure_openai_deployment: Optional[str] = None
+    dashscope_api_key: Optional[str] = None
+    
+    # Server Configuration
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    api_reload: bool = True
+    frontend_port: int = 3000
+    frontend_host: str = "0.0.0.0"
+    server_base_url: str = "http://localhost:8000"
+    api_base_url: str = "http://localhost:8000/api"
+    ws_url: str = "ws://localhost:8000/ws"
     
     # Application Settings
+    app_name: str = "Grantha"
+    app_version: str = "1.0.0"
+    app_description: str = "Advanced AI Platform for Documentation, Chat, and Research"
+    
+    # Environment
+    node_env: str = "development"
+    python_env: str = "development"
+    
+    # Security
+    secret_key: str = "grantha_dev_secret_change_in_production"
+    cors_origins: List[str] = field(default_factory=lambda: [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ])
+    
+    # Feature Flags
+    enable_agents: bool = True
+    enable_research: bool = True
+    enable_wiki: bool = True
+    enable_simple: bool = True
+    enable_chat: bool = True
+    
+    # Legacy Settings
     wiki_auth_mode: bool = False
     wiki_auth_code: str = ""
     config_dir: Optional[str] = None
     
+    # Logging
+    log_level: str = "INFO"
+    log_format: str = "json"
+    log_file: str = "logs/grantha.log"
+    
+    # AI Model Configuration
+    default_model: str = "gpt-4"
+    default_temperature: float = 0.7
+    default_max_tokens: int = 2000
+    default_embedding_model: str = "text-embedding-ada-002"
+    
+    # Build & Development
+    debug: bool = False
+    build_version: str = "1.0.0"
+    
     def __post_init__(self):
         """Load configuration from environment variables."""
+        # API Keys
         self.openai_api_key = os.environ.get('OPENAI_API_KEY')
         self.google_api_key = os.environ.get('GOOGLE_API_KEY')
         self.openrouter_api_key = os.environ.get('OPENROUTER_API_KEY')
@@ -38,14 +104,70 @@ class Config:
         self.aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
         self.aws_region = os.environ.get('AWS_REGION')
         self.aws_role_arn = os.environ.get('AWS_ROLE_ARN')
+        self.azure_openai_api_key = os.environ.get('AZURE_OPENAI_API_KEY')
+        self.azure_openai_endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
+        self.azure_openai_deployment = os.environ.get('AZURE_OPENAI_DEPLOYMENT')
+        self.dashscope_api_key = os.environ.get('DASHSCOPE_API_KEY')
         
-        # Wiki authentication settings
-        raw_auth_mode = os.environ.get('GRANTHA_AUTH_MODE', 'False')
+        # Server Configuration
+        self.api_host = os.environ.get('API_HOST', self.api_host)
+        self.api_port = int(os.environ.get('API_PORT', self.api_port))
+        self.api_reload = os.environ.get('API_RELOAD', str(self.api_reload)).lower() in ['true', '1', 't']
+        self.frontend_port = int(os.environ.get('FRONTEND_PORT', self.frontend_port))
+        self.frontend_host = os.environ.get('FRONTEND_HOST', self.frontend_host)
+        self.server_base_url = os.environ.get('SERVER_BASE_URL', self.server_base_url)
+        self.api_base_url = os.environ.get('API_BASE_URL', self.api_base_url)
+        self.ws_url = os.environ.get('WS_URL', self.ws_url)
+        
+        # Application Settings
+        self.app_name = os.environ.get('APP_NAME', self.app_name)
+        self.app_version = os.environ.get('APP_VERSION', self.app_version)
+        self.app_description = os.environ.get('APP_DESCRIPTION', self.app_description)
+        
+        # Environment
+        self.node_env = os.environ.get('NODE_ENV', self.node_env)
+        self.python_env = os.environ.get('PYTHON_ENV', self.python_env)
+        
+        # Security
+        self.secret_key = os.environ.get('SECRET_KEY', self.secret_key)
+        cors_origins_str = os.environ.get('CORS_ORIGINS', '')
+        if cors_origins_str:
+            try:
+                import json
+                self.cors_origins = json.loads(cors_origins_str)
+            except (json.JSONDecodeError, TypeError):
+                # Fallback to comma-separated values
+                self.cors_origins = [url.strip() for url in cors_origins_str.split(',') if url.strip()]
+        
+        # Feature Flags
+        self.enable_agents = os.environ.get('ENABLE_AGENTS', str(self.enable_agents)).lower() in ['true', '1', 't']
+        self.enable_research = os.environ.get('ENABLE_RESEARCH', str(self.enable_research)).lower() in ['true', '1', 't']
+        self.enable_wiki = os.environ.get('ENABLE_WIKI', str(self.enable_wiki)).lower() in ['true', '1', 't']
+        self.enable_simple = os.environ.get('ENABLE_SIMPLE', str(self.enable_simple)).lower() in ['true', '1', 't']
+        self.enable_chat = os.environ.get('ENABLE_CHAT', str(self.enable_chat)).lower() in ['true', '1', 't']
+        
+        # Legacy Settings (Wiki authentication)
+        raw_auth_mode = os.environ.get('GRANTHA_AUTH_MODE', str(self.wiki_auth_mode))
         self.wiki_auth_mode = raw_auth_mode.lower() in ['true', '1', 't']
-        self.wiki_auth_code = os.environ.get('GRANTHA_AUTH_CODE', '')
+        self.wiki_auth_code = os.environ.get('GRANTHA_AUTH_CODE', self.wiki_auth_code)
         
         # Configuration directory
-        self.config_dir = os.environ.get('GRANTHA_CONFIG_DIR', None)
+        self.config_dir = os.environ.get('GRANTHA_CONFIG_DIR', self.config_dir)
+        
+        # Logging
+        self.log_level = os.environ.get('LOG_LEVEL', self.log_level)
+        self.log_format = os.environ.get('LOG_FORMAT', self.log_format)
+        self.log_file = os.environ.get('LOG_FILE', self.log_file)
+        
+        # AI Model Configuration
+        self.default_model = os.environ.get('DEFAULT_MODEL', self.default_model)
+        self.default_temperature = float(os.environ.get('DEFAULT_TEMPERATURE', self.default_temperature))
+        self.default_max_tokens = int(os.environ.get('DEFAULT_MAX_TOKENS', self.default_max_tokens))
+        self.default_embedding_model = os.environ.get('DEFAULT_EMBEDDING_MODEL', self.default_embedding_model)
+        
+        # Build & Development
+        self.debug = os.environ.get('DEBUG', str(self.debug)).lower() in ['true', '1', 't']
+        self.build_version = os.environ.get('BUILD_VERSION', self.build_version)
         
         # Set environment variables (for backward compatibility)
         self._set_env_vars()
