@@ -5,6 +5,11 @@
 	import { MessageSquare, Trash2, Edit } from 'lucide-svelte';
 	import { cn } from '$lib/utils';
 
+	// Focus action for input elements
+	function focus(element: HTMLElement) {
+		element.focus();
+	}
+
 	let editingId = $state<string | null>(null);
 	let editTitle = $state('');
 
@@ -71,8 +76,8 @@
 								bind:value={editTitle}
 								onkeydown={handleKeydown}
 								onblur={saveEdit}
+								use:focus
 								class="w-full bg-background border border-border rounded px-2 py-1 text-sm"
-								autofocus
 							/>
 						{:else}
 							<div class="flex items-center space-x-2">

@@ -103,11 +103,12 @@
 
 	<!-- Streaming message -->
 	{#if $chatState.isStreaming && $chatState.streamingMessage}
-		<div class="flex justify-start">
+		<div class="flex justify-start message-fade-in">
 			<div class="group max-w-[80%] rounded-lg p-4 bg-muted text-muted-foreground mr-12">
 				<div class="flex items-center space-x-2 mb-2">
 					<Bot class="h-4 w-4" />
 					<span class="text-sm font-medium">Assistant</span>
+					<span class="text-xs text-green-500">typing...</span>
 					<div class="flex space-x-1">
 						<div class="w-1 h-1 bg-current rounded-full animate-pulse"></div>
 						<div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
@@ -121,19 +122,60 @@
 				</div>
 			</div>
 		</div>
+	{:else if $chatState.isStreaming}
+		<div class="flex justify-start message-fade-in">
+			<div class="group max-w-[80%] rounded-lg p-4 bg-muted text-muted-foreground mr-12">
+				<div class="flex items-center space-x-2 mb-2">
+					<Bot class="h-4 w-4" />
+					<span class="text-sm font-medium">Assistant</span>
+					<span class="text-xs text-blue-500">thinking...</span>
+					<div class="flex space-x-1">
+						<div class="w-1 h-1 bg-current rounded-full animate-pulse"></div>
+						<div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0.2s;"></div>
+						<div class="w-1 h-1 bg-current rounded-full animate-pulse" style="animation-delay: 0.4s;"></div>
+					</div>
+				</div>
+				
+				<div class="text-sm text-muted-foreground">
+					Preparing response...
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Error message -->
+	{#if $chatState.error}
+		<div class="flex justify-start message-fade-in">
+			<div class="group max-w-[80%] rounded-lg p-4 bg-destructive/10 border border-destructive/20 text-destructive mr-12">
+				<div class="flex items-center space-x-2 mb-2">
+					<Bot class="h-4 w-4" />
+					<span class="text-sm font-medium">Error</span>
+				</div>
+				
+				<div class="text-sm">
+					{$chatState.error}
+				</div>
+			</div>
+		</div>
 	{/if}
 
 	<!-- Welcome message for empty conversations -->
-	{#if conversation.messages.length === 0 && !$chatState.isStreaming}
+	{#if conversation.messages.length === 0 && !$chatState.isStreaming && !$chatState.error}
 		<div class="flex items-center justify-center h-full">
 			<div class="text-center max-w-md">
 				<Bot class="h-16 w-16 text-muted-foreground mx-auto mb-4" />
 				<h3 class="text-lg font-semibold text-foreground mb-2">
 					Start a conversation
 				</h3>
-				<p class="text-muted-foreground text-sm">
+				<p class="text-muted-foreground text-sm mb-4">
 					Ask me anything! I can help with coding, writing, analysis, and much more.
 				</p>
+				<div class="grid grid-cols-1 gap-2 text-xs text-muted-foreground">
+					<p>• Code explanations and debugging</p>
+					<p>• Writing assistance and editing</p>
+					<p>• Data analysis and insights</p>
+					<p>• Problem-solving and brainstorming</p>
+				</div>
 			</div>
 		</div>
 	{/if}
