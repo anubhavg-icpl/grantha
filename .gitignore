@@ -80,8 +80,7 @@ yarn-error.log*
 lerna-debug.log*
 .npm
 
-# pnpm
-pnpm-lock.yaml
+# pnpm (keep lock file for reproducible builds)
 .pnpm-store/
 .pnpm-debug.log*
 
