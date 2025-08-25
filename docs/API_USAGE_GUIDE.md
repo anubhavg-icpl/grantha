@@ -43,7 +43,7 @@ NODE_ENV=production python main.py
 docker-compose up
 ```
 
-The API will be available at `http://localhost:8001`
+The API will be available at `http://localhost:8000`
 
 ## Authentication
 
@@ -204,7 +204,7 @@ import requests
 import json
 
 response = requests.post(
-    "http://localhost:8001/v1/chat",
+    "http://localhost:8000/v1/chat",
     json={
         "model": "gpt-4",
         "messages": [{"role": "user", "content": "Write a story"}],
@@ -236,7 +236,7 @@ providers = ["openai", "google", "azure", "bedrock", "dashscope", "openrouter"]
 
 for provider in providers:
     response = requests.post(
-        "http://localhost:8001/simple_chat",
+        "http://localhost:8000/simple_chat",
         json={
             "query": "Hello",
             "provider": provider
@@ -254,7 +254,7 @@ import requests
 import json
 
 class GranthaClient:
-    def __init__(self, base_url="http://localhost:8001"):
+    def __init__(self, base_url="http://localhost:8000"):
         self.base_url = base_url
 
     def chat(self, message, provider="openai"):
@@ -293,7 +293,7 @@ print(response)
 class GranthaClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "http://localhost:8001") {
+  constructor(baseUrl: string = "http://localhost:8000") {
     this.baseUrl = baseUrl;
   }
 
@@ -347,22 +347,22 @@ await client.chat("Hello, Grantha!");
 
 ```bash
 # Simple chat
-curl -X POST http://localhost:8001/simple_chat \
+curl -X POST http://localhost:8000/simple_chat \
   -H "Content-Type: application/json" \
   -d '{"query": "Hello", "provider": "openai"}'
 
 # Deep research
-curl -X POST http://localhost:8001/deep_research \
+curl -X POST http://localhost:8000/deep_research \
   -H "Content-Type: application/json" \
   -d '{"topic": "AI Safety", "max_rounds": 3}'
 
 # RAG query
-curl -X POST http://localhost:8001/rag \
+curl -X POST http://localhost:8000/rag \
   -H "Content-Type: application/json" \
   -d '{"query": "How does RAG work?", "repo_id": "docs"}'
 
 # Streaming chat
-curl -X POST http://localhost:8001/v1/chat \
+curl -X POST http://localhost:8000/v1/chat \
   -H "Content-Type: application/json" \
   -d '{"model": "gpt-4", "messages": [{"role": "user", "content": "Tell me a joke"}], "stream": true}' \
   --no-buffer
@@ -395,7 +395,7 @@ Error Response Format:
 def safe_api_call(endpoint, payload):
     try:
         response = requests.post(
-            f"http://localhost:8001/{endpoint}",
+            f"http://localhost:8000/{endpoint}",
             json=payload
         )
         response.raise_for_status()
@@ -492,7 +492,7 @@ def track_usage(response):
 For real-time wiki generation:
 
 ```javascript
-const ws = new WebSocket('ws://localhost:8001/ws/wiki');
+const ws = new WebSocket('ws://localhost:8000/ws/wiki');
 
 ws.onopen = () => {
   ws.send(JSON.stringify({
@@ -528,7 +528,7 @@ services:
   grantha:
     build: .
     ports:
-      - "8001:8001"
+      - "8000:8000"
     environment:
       - NODE_ENV=production
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
@@ -549,7 +549,7 @@ docker-compose up -d
 Monitor API health:
 
 ```bash
-curl http://localhost:8001/health
+curl http://localhost:8000/health
 ```
 
 Response:
@@ -568,8 +568,8 @@ Response:
 
 ## Support
 
-- **Documentation**: [/docs](http://localhost:8001/docs)
-- **API Reference**: [/redoc](http://localhost:8001/redoc)
+- **Documentation**: [/docs](http://localhost:8000/docs)
+- **API Reference**: [/redoc](http://localhost:8000/redoc)
 - **GitHub Issues**: [github.com/anubhavg-icpl/grantha/issues](https://github.com/anubhavg-icpl/grantha/issues)
 - **Email**: support@grantha.ai
 

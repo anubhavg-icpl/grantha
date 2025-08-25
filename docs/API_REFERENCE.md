@@ -2,7 +2,7 @@
 
 ## Base Information
 
-- **Base URL**: `http://localhost:8001` (default)
+- **Base URL**: `http://localhost:8000` (default)
 - **API Version**: 1.0.0
 - **Protocol**: HTTP/HTTPS with WebSocket support
 - **Content-Type**: `application/json`
@@ -556,7 +556,7 @@ import requests
 import json
 
 # Generate wiki structure
-response = requests.post('http://localhost:8001/api/wiki/generate', 
+response = requests.post('http://localhost:8000/api/wiki/generate',
   json={
     "repoInfo": {
       "owner": "username",
@@ -574,7 +574,7 @@ print(json.dumps(wiki_structure, indent=2))
 ### JavaScript Example
 ```javascript
 // Streaming chat completion
-const response = await fetch('http://localhost:8001/chat/completions/stream', {
+const response = await fetch('http://localhost:8000/chat/completions/stream', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -590,7 +590,7 @@ const reader = response.body.getReader();
 while (true) {
   const { done, value } = await reader.read();
   if (done) break;
-  
+
   const chunk = new TextDecoder().decode(value);
   console.log(chunk);
 }
@@ -599,10 +599,10 @@ while (true) {
 ### cURL Examples
 ```bash
 # Health check
-curl http://localhost:8001/health
+curl http://localhost:8000/health
 
 # Generate wiki
-curl -X POST http://localhost:8001/api/wiki/generate \
+curl -X POST http://localhost:8000/api/wiki/generate \
   -H "Content-Type: application/json" \
   -d '{
     "repoInfo": {
@@ -614,7 +614,7 @@ curl -X POST http://localhost:8001/api/wiki/generate \
   }'
 
 # Streaming chat
-curl -N -X POST http://localhost:8001/chat/completions/stream \
+curl -N -X POST http://localhost:8000/chat/completions/stream \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role": "user", "content": "Hello"}],

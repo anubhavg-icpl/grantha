@@ -41,7 +41,7 @@ else:
 def main():
     """Main entry point."""
     # Get port from environment variable or use default
-    port = int(os.environ.get("PORT", 8001))
+    port = int(os.environ.get("PORT", 8000))
 
     # Create the FastAPI app
     app = create_app()
@@ -51,7 +51,7 @@ def main():
     # Run the FastAPI app with uvicorn
     # Disable reload in production/Docker environment
     is_development = os.environ.get("NODE_ENV") != "production"
-    
+
     if is_development:
         # Prevent infinite logging loop caused by file changes triggering log writes
         logging.getLogger("watchfiles.main").setLevel(logging.WARNING)

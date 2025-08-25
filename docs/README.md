@@ -75,8 +75,8 @@ Grantha is an AI-powered knowledge management and documentation system that prov
    ```
 
 4. **Access the API**
-   - Health check: `http://localhost:8001/health`
-   - API documentation: `http://localhost:8001/docs`
+   - Health check: `http://localhost:8000/health`
+   - API documentation: `http://localhost:8000/docs`
 
 ## Environment Variables
 

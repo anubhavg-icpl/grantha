@@ -71,7 +71,7 @@ GRANTHA_CONFIG_DIR=/path/to/custom/config
 
 # Development settings
 NODE_ENV=development
-PORT=8001
+PORT=8000
 ```
 
 ### 5. Configuration Files
@@ -139,7 +139,7 @@ The system uses JSON configuration files in `api/config/`. Create or customize:
 python -m api.main
 ```
 
-The server will start on `http://localhost:8001` with hot reloading enabled.
+The server will start on `http://localhost:8000` with hot reloading enabled.
 
 ## Development Workflow
 
@@ -582,10 +582,10 @@ GRANTHA_CONFIG_DIR=/path/to/config python -m api.main
 pip install gunicorn
 
 # Run with Gunicorn
-gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001
+gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 
 # With environment file
-gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8001 --env-file .env
+gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --env-file .env
 ```
 
 #### Docker Deployment
@@ -601,7 +601,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-EXPOSE 8001
+EXPOSE 8000
 
 CMD ["python", "-m", "api.main"]
 ```
@@ -609,7 +609,7 @@ CMD ["python", "-m", "api.main"]
 ```bash
 # Build and run
 docker build -t grantha-api .
-docker run -p 8001:8001 --env-file .env grantha-api
+docker run -p 8000:8000 --env-file .env grantha-api
 ```
 
 ### Monitoring and Maintenance

@@ -106,7 +106,7 @@ security-scan:
 # Development
 run-local:
 	@echo "Starting Grantha API locally..."
-	python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8001
+	python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 clean:
 	@echo "Cleaning build artifacts..."
@@ -193,7 +193,7 @@ version-check:
 # Health check
 health-check:
 	@echo "Running health checks..."
-	python -c "import requests; print('API Health:', requests.get('http://localhost:8001/health').json())" || echo "API not running"
+	python -c "import requests; print('API Health:', requests.get('http://localhost:8000/health').json())" || echo "API not running"
 
 # Quick development workflow
 dev: format lint test-fast
