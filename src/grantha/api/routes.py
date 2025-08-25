@@ -1,0 +1,150 @@
+"""API routes for the Grantha platform."""
+
+import logging
+from fastapi import APIRouter, HTTPException, Query, Request, WebSocket
+from fastapi.responses import JSONResponse, StreamingResponse
+from typing import List, Optional, Dict, Any, Literal
+
+from ..models.api_models import (
+    AuthorizationConfig,
+    ModelConfig,
+    WikiGenerationRequest,
+    DeepResearchRequest,
+    ChatRequest,
+    ChatResponse,
+    SimpleRequest,
+    RAGRequest,
+    WikiCacheRequest,
+    WikiExportRequest
+)
+from ..core.config import get_config, configs
+
+logger = logging.getLogger(__name__)
+
+# Create routers
+auth_router = APIRouter()
+models_router = APIRouter()
+wiki_router = APIRouter()
+chat_router = APIRouter()
+research_router = APIRouter()
+simple_router = APIRouter()
+
+
+# Authentication routes
+@auth_router.get("/status")
+async def get_auth_status():
+    """Check if authentication is required for the wiki."""
+    config = get_config()
+    return {"auth_required": config.wiki_auth_mode}
+
+
+@auth_router.post("/validate")
+async def validate_auth_code(request: AuthorizationConfig):
+    """Check authorization code."""
+    config = get_config()
+    return {"success": config.wiki_auth_code == request.code}
+
+
+# Language configuration route
+@auth_router.get("/lang/config")
+async def get_lang_config():
+    """Get language configuration."""
+    return configs.get("lang", {})
+
+
+# Models routes
+@models_router.get("/config", response_model=ModelConfig)
+async def get_model_config():
+    """
+    Get available model providers and their models.
+    
+    This endpoint returns the configuration of available model providers and their
+    respective models that can be used throughout the application.
+    """
+    try:
+        generator_config = configs.get("generator", {})
+        
+        if not generator_config or "providers" not in generator_config:
+            # Return default configuration
+            return ModelConfig(
+                providers=[],
+                defaultProvider="google"
+            )
+        
+        providers = []
+        for provider_id, provider_config in generator_config["providers"].items():
+            if provider_config.get("enabled", True):
+                provider = {
+                    "id": provider_id,
+                    "name": provider_config.get("name", provider_id.title()),
+                    "models": [
+                        {"id": model_id, "name": model_config.get("name", model_id)}
+                        for model_id, model_config in provider_config.get("models", {}).items()
+                    ],
+                    "supportsCustomModel": provider_config.get("supportsCustomModel", False)
+                }
+                providers.append(provider)
+        
+        default_provider = generator_config.get("default_provider", "google")
+        
+        return ModelConfig(
+            providers=providers,
+            defaultProvider=default_provider
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting model config: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve model configuration")
+
+
+# Wiki routes (placeholder - will need to import actual implementations)
+@wiki_router.post("/generate")
+async def generate_wiki(request: WikiGenerationRequest):
+    """Generate wiki documentation for a repository."""
+    # This will need to be implemented with the actual wiki generator
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+@wiki_router.post("/cache")
+async def save_wiki_cache(request: WikiCacheRequest):
+    """Save wiki cache data."""
+    # This will need to be implemented with the actual cache logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+@wiki_router.post("/export")
+async def export_wiki(request: WikiExportRequest):
+    """Export wiki pages in the specified format."""
+    # This will need to be implemented with the actual export logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+# Chat routes (placeholder)
+@chat_router.post("/completion")
+async def chat_completion(request: ChatRequest):
+    """Handle chat completion requests."""
+    # This will need to be implemented with the actual chat logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+# Research routes (placeholder)
+@research_router.post("/deep")
+async def deep_research(request: DeepResearchRequest):
+    """Perform deep research on a topic."""
+    # This will need to be implemented with the actual research logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+# Simple routes (placeholder)
+@simple_router.post("/chat")
+async def simple_chat(request: SimpleRequest):
+    """Handle simple chat requests."""
+    # This will need to be implemented with the actual simple chat logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
+
+
+@simple_router.post("/rag")
+async def simple_rag(request: RAGRequest):
+    """Handle RAG (Retrieval-Augmented Generation) requests."""
+    # This will need to be implemented with the actual RAG logic
+    raise HTTPException(status_code=501, detail="Not implemented yet")
