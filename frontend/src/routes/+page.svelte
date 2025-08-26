@@ -25,6 +25,7 @@
 	import Card from '$lib/components/ui/card.svelte';
 	import Badge from '$lib/components/ui/badge.svelte';
 	import ProcessedProjects from '$lib/components/projects/ProcessedProjects.svelte';
+	import { apiClient } from '$lib/api/client';
 	import type { ProcessedProjectEntry } from '$lib/types/api';
 
 	interface DashboardCard {
@@ -109,9 +110,16 @@
 		
 		// Load recent projects
 		try {
-			const response = await fetch('http://localhost:8000/api/processed_projects');
-			if (response.ok) {
-				const projects = await response.json();
+			// Try the new wiki/projects endpoint first, fallback to legacy endpoint
+			let projects;
+			try {
+				projects = await apiClient.getWikiProjects();
+			} catch (wikiError) {
+				console.warn('Wiki projects endpoint failed, trying legacy endpoint:', wikiError);
+				projects = await apiClient.getProcessedProjects();
+			}
+			
+			if (Array.isArray(projects)) {
 				recentProjects = projects.slice(0, 3); // Show only 3 most recent
 				stats.totalProjects = projects.length;
 			}

@@ -4,6 +4,7 @@ import logging
 import os
 import asyncio
 import json
+import time
 from pathlib import Path
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket
@@ -165,95 +166,156 @@ async def get_model_config():
 # Wiki routes
 @wiki_router.post("/generate")
 async def generate_wiki(request: WikiGenerationRequest):
-    """Generate wiki documentation for a repository."""
+    """Generate wiki documentation for a repository with caching and performance optimization."""
+    start_time = time.time()
+    logger.info(f"Starting wiki generation for {request.repo_url}")
+    
     try:
-        # Use Gemini model for wiki generation if available
-        if gemini_model:
-            wiki_prompt = f"""
-            Generate comprehensive wiki documentation for repository: {request.repo_url}
-            Language: {request.language}
-            
-            Create structured documentation including:
-            1. Project overview and description
-            2. Installation and setup instructions
-            3. Architecture overview
-            4. API documentation
-            5. Usage examples
-            6. Contributing guidelines
-            7. FAQ section
-            
-            Format the output in a clear, well-structured wiki format.
-            """
-            
-            response = gemini_model.generate_content(wiki_prompt)
-            
-            # Create a basic wiki structure
-            wiki_structure = {
-                "id": f"wiki_{request.repo_url.replace('/', '_')}",
-                "title": f"Wiki for {request.repo_url}",
-                "description": "Auto-generated wiki documentation",
-                "pages": [
-                    {
-                        "id": "overview",
-                        "title": "Overview",
-                        "content": response.text,
-                        "filePaths": [],
-                        "importance": "high",
-                        "relatedPages": []
-                    }
-                ],
-                "sections": [],
-                "rootSections": ["overview"]
-            }
-            
-            # Extract owner and repo from URL
+        # Parse repo URL to extract owner and repo
+        repo_parts = request.repo_url.replace("https://", "").replace("http://", "").split("/")
+        if len(repo_parts) >= 3:
+            owner = repo_parts[1]
+            repo = repo_parts[2]
+        else:
+            # Fallback for invalid URLs
+            owner = "unknown" 
+            repo = request.repo_url.replace("/", "_")
+        
+        repo_type = request.repo_type or "github"
+        language = request.language or "en"
+        
+        # Check for existing cache first
+        logger.info(f"Checking cache for {owner}/{repo} ({repo_type}, {language})")
+        cache_path = get_wiki_cache_path(owner, repo, repo_type, language)
+        
+        if os.path.exists(cache_path):
+            logger.info(f"Cache found at {cache_path}, loading cached wiki")
             try:
-                # Parse repo URL to extract owner and repo
-                repo_parts = request.repo_url.replace("https://", "").replace("http://", "").split("/")
-                if len(repo_parts) >= 3:
-                    owner = repo_parts[1]
-                    repo = repo_parts[2]
-                else:
-                    # Fallback for invalid URLs
-                    owner = "unknown"
-                    repo = request.repo_url.replace("/", "_")
+                with open(cache_path, 'r', encoding='utf-8') as f:
+                    cached_data = json.load(f)
                 
-                # Save the generated project
+                # Check if cache is less than 24 hours old
+                cached_at = datetime.fromisoformat(cached_data.get("cached_at", "1970-01-01"))
+                cache_age = datetime.utcnow() - cached_at
+                
+                if cache_age.total_seconds() < 86400:  # 24 hours
+                    logger.info(f"Using cached wiki data (age: {cache_age})")
+                    return {
+                        "wiki_structure": cached_data.get("wiki_structure"),
+                        "status": "success",
+                        "provider": cached_data.get("provider", "google"),
+                        "model": cached_data.get("model", "gemini-2.0-flash-exp"),
+                        "cached": True,
+                        "cache_age_hours": round(cache_age.total_seconds() / 3600, 2)
+                    }
+                else:
+                    logger.info(f"Cache expired (age: {cache_age}), regenerating wiki")
+            except Exception as e:
+                logger.warning(f"Failed to read cache: {e}, generating new wiki")
+        
+        # Use advanced WikiGenerator for comprehensive analysis
+        if gemini_model:
+            logger.info("Using advanced WikiGenerator for comprehensive repository analysis")
+            
+            # Import and use the advanced WikiGenerator
+            from ..utils.wiki_generator import WikiGenerator
+            from ..utils.data_pipeline import download_repo
+            import tempfile
+            import shutil
+            
+            # Create temporary directory for repo download
+            with tempfile.TemporaryDirectory() as temp_dir:
+                try:
+                    # Download repository for analysis
+                    logger.info(f"Downloading repository {request.repo_url} to {temp_dir}")
+                    repo_path = download_repo(
+                        request.repo_url, 
+                        temp_dir,
+                        repo_type,
+                        None  # access_token - can be added later if needed
+                    )
+                    
+                    logger.info(f"Repository downloaded to {repo_path}")
+                    
+                    # Initialize WikiGenerator
+                    wiki_generator = WikiGenerator(
+                        provider=request.provider or "google",
+                        model=request.model or "gemini-2.0-flash-exp"
+                    )
+                    
+                    # Generate comprehensive wiki structure
+                    logger.info("Generating comprehensive wiki structure")
+                    wiki_structure = wiki_generator.generate_wiki_structure(
+                        repo_path,
+                        request.repo_url,
+                        language
+                    )
+                    
+                    logger.info(f"Wiki structure generated with {len(wiki_structure.get('pages', []))} pages")
+                    
+                except Exception as e:
+                    logger.warning(f"Advanced wiki generation failed: {e}, falling back to basic generation")
+                    # Fallback to basic generation if download/analysis fails
+                    wiki_structure = await _generate_basic_wiki(request, gemini_model)
+            
+            # Save to both cache systems
+            try:
+                # Save to wikicache
+                cache_data = {
+                    "wiki_structure": wiki_structure,
+                    "generated_pages": {page["id"]: page for page in wiki_structure.get("pages", [])},
+                    "repo": {
+                        "owner": owner,
+                        "repo": repo,
+                        "type": repo_type,
+                        "url": request.repo_url
+                    },
+                    "provider": request.provider or "google",
+                    "model": request.model or "gemini-2.0-flash-exp",
+                    "cached_at": datetime.utcnow().isoformat()
+                }
+                
+                # Ensure cache directory exists
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                
+                # Save to wikicache
+                with open(cache_path, 'w', encoding='utf-8') as f:
+                    json.dump(cache_data, f, indent=2, ensure_ascii=False)
+                
+                logger.info(f"Wiki cache saved to {cache_path}")
+                
+                # Also save to project storage for compatibility
                 from ..utils.project_storage import ProjectStorage
                 storage = ProjectStorage()
                 
-                generated_pages = {
-                    "overview": {
-                        "id": "overview",
-                        "title": "Overview", 
-                        "content": response.text,
-                        "filePaths": [],
-                        "importance": "high",
-                        "relatedPages": []
-                    }
-                }
+                generated_pages = {page["id"]: page for page in wiki_structure.get("pages", [])}
                 
                 project_id = storage.save_project(
                     owner=owner,
                     repo=repo,
-                    repo_type=request.repo_type or "github",
-                    language=request.language or "en",
+                    repo_type=repo_type,
+                    language=language,
                     wiki_structure=wiki_structure,
                     generated_pages=generated_pages,
                     provider=request.provider or "google",
                     model=request.model or "gemini-2.0-flash-exp"
                 )
                 
-                logger.info(f"Saved project {project_id} for {owner}/{repo}")
+                logger.info(f"Project saved to storage with ID: {project_id}")
                 
             except Exception as e:
-                logger.warning(f"Failed to save project: {e}")
+                logger.error(f"Failed to save cache: {e}")
+            
+            generation_time = time.time() - start_time
+            logger.info(f"Wiki generation completed in {generation_time:.2f} seconds")
             
             return {
                 "wiki_structure": wiki_structure,
-                "status": "success",
+                "status": "success", 
                 "provider": request.provider or "google",
-                "model": request.model or "gemini-2.0-flash-exp"
+                "model": request.model or "gemini-2.0-flash-exp",
+                "cached": False,
+                "generation_time_seconds": round(generation_time, 2)
             }
         else:
             return {
@@ -261,8 +323,53 @@ async def generate_wiki(request: WikiGenerationRequest):
                 "message": "Wiki generation requires Google API key configuration."
             }
     except Exception as e:
-        logger.error(f"Error in wiki generation: {str(e)}")
+        generation_time = time.time() - start_time
+        logger.error(f"Error in wiki generation after {generation_time:.2f}s: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _generate_basic_wiki(request: WikiGenerationRequest, gemini_model) -> dict:
+    """Fallback basic wiki generation when advanced generation fails."""
+    logger.info("Using basic wiki generation fallback")
+    
+    wiki_prompt = f"""
+    Generate comprehensive wiki documentation for repository: {request.repo_url}
+    Language: {request.language}
+    
+    Create structured documentation including:
+    1. Project overview and description
+    2. Installation and setup instructions
+    3. Architecture overview
+    4. API documentation
+    5. Usage examples
+    6. Contributing guidelines
+    7. FAQ section
+    
+    Format the output in a clear, well-structured wiki format.
+    """
+    
+    response = gemini_model.generate_content(wiki_prompt)
+    
+    # Create a basic wiki structure
+    return {
+        "id": f"wiki_{request.repo_url.replace('/', '_')}",
+        "title": f"Wiki for {request.repo_url}",
+        "description": "Auto-generated wiki documentation",
+        "pages": [
+            {
+                "id": "overview",
+                "title": "Overview",
+                "content": response.text,
+                "filePaths": [],
+                "importance": "high",
+                "relatedPages": []
+            }
+        ],
+        "sections": [],
+        "rootSections": ["overview"],
+        "generated_at": datetime.utcnow().isoformat(),
+        "language": request.language or "en"
+    }
 
 
 @wiki_router.post("/cache")

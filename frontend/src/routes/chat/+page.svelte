@@ -387,11 +387,14 @@
       <div class="p-2">
         <h3 class="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent Conversations</h3>
         {#each conversations as conversation}
-          <button
-            onclick={() => loadConversation(conversation.id)}
-            class="w-full group mb-1 relative"
-          >
-            <div class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-accent transition-colors {currentConversationId === conversation.id ? 'bg-accent' : ''}">
+          <div class="w-full group mb-1 relative">
+            <div 
+              onclick={() => loadConversation(conversation.id)}
+              class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-accent transition-colors cursor-pointer {currentConversationId === conversation.id ? 'bg-accent' : ''}"
+              role="button"
+              tabindex="0"
+              onkeydown={(e) => e.key === 'Enter' && loadConversation(conversation.id)}
+            >
               <div class="flex-1 text-left min-w-0">
                 <div class="text-sm font-medium truncate">{conversation.title}</div>
                 <div class="text-xs text-muted-foreground">
@@ -401,11 +404,12 @@
               <button
                 onclick={(e) => deleteConversation(conversation.id, e)}
                 class="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded transition-all"
+                aria-label="Delete conversation"
               >
                 <Trash2 class="w-4 h-4 text-destructive" />
               </button>
             </div>
-          </button>
+          </div>
         {/each}
         {#if conversations.length === 0}
           <div class="px-3 py-8 text-center">

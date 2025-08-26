@@ -20,6 +20,8 @@ export interface ProcessedProjectEntry {
   repo_type: string;
   submittedAt: number;
   language: string;
+  provider?: string;
+  model?: string;
 }
 
 export interface RepoInfo {

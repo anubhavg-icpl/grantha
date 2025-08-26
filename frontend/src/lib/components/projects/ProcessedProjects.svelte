@@ -3,6 +3,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Card from '$lib/components/ui/card.svelte';
+	import { apiClient } from '$lib/api/client';
 	import type { ProcessedProjectEntry } from '$lib/types/api';
 	
 	interface Props {
@@ -25,11 +26,19 @@
 	
 	// Filter and limit projects
 	let filteredProjects = $derived.by(() => {
+		if (!searchQuery.trim()) {
+			return maxItems ? projects.slice(0, maxItems) : projects;
+		}
+		
+		const query = searchQuery.toLowerCase().trim();
 		let filtered = projects.filter(project => 
-			project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			project.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			project.repo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			project.repo_type.toLowerCase().includes(searchQuery.toLowerCase())
+			project.name.toLowerCase().includes(query) ||
+			project.owner.toLowerCase().includes(query) ||
+			project.repo.toLowerCase().includes(query) ||
+			project.repo_type.toLowerCase().includes(query) ||
+			project.language.toLowerCase().includes(query) ||
+			(project.provider && project.provider.toLowerCase().includes(query)) ||
+			(project.model && project.model.toLowerCase().includes(query))
 		);
 		
 		return maxItems ? filtered.slice(0, maxItems) : filtered;
@@ -44,20 +53,22 @@
 		error = null;
 		
 		try {
-			const response = await fetch('/api/processed_projects');
-			if (!response.ok) {
-				throw new Error(`Failed to fetch projects: ${response.statusText}`);
+			// Try the new wiki/projects endpoint first, fallback to legacy endpoint
+			try {
+				projects = await apiClient.getWikiProjects();
+				console.log(`Successfully loaded ${projects.length} projects from wiki/projects endpoint`);
+			} catch (wikiError) {
+				console.warn('Wiki projects endpoint failed, trying legacy endpoint:', wikiError);
+				projects = await apiClient.getProcessedProjects();
+				console.log(`Successfully loaded ${projects.length} projects from legacy endpoint`);
 			}
 			
-			const data = await response.json();
-			if (data.error) {
-				throw new Error(data.error);
+			if (!Array.isArray(projects)) {
+				throw new Error('Invalid response format: Expected an array of projects');
 			}
-			
-			projects = Array.isArray(data) ? data : [];
 		} catch (e) {
 			console.error('Failed to load projects from API:', e);
-			error = e instanceof Error ? e.message : 'An unknown error occurred.';
+			error = e instanceof Error ? e.message : 'An unknown error occurred while loading projects.';
 			projects = [];
 		} finally {
 			isLoading = false;
@@ -69,32 +80,34 @@
 	}
 	
 	async function handleDelete(project: ProcessedProjectEntry) {
-		if (!confirm(`Are you sure you want to delete project ${project.name}?`)) {
+		const confirmMessage = `Are you sure you want to delete project "${project.name}"?\n\nThis will remove:\n- All generated wiki pages\n- Project cache data\n- Processing history\n\nThis action cannot be undone.`;
+		
+		if (!confirm(confirmMessage)) {
 			return;
 		}
 		
 		try {
-			const params = new URLSearchParams({
-				owner: project.owner,
-				repo: project.repo,
-				repo_type: project.repo_type,
-				language: project.language
-			});
+			console.log(`Deleting project: ${project.name} (${project.owner}/${project.repo})`);
 			
-			const response = await fetch(`/api/wiki_cache?${params}`, {
-				method: 'DELETE',
-				headers: { 'Content-Type': 'application/json' }
-			});
+			// Use the API client method instead of direct fetch
+			await apiClient.deleteProjectCache(
+				project.owner,
+				project.repo,
+				project.repo_type,
+				project.language
+			);
 			
-			if (!response.ok) {
-				const errorBody = await response.json().catch(() => ({ error: response.statusText }));
-				throw new Error(errorBody.error || response.statusText);
-			}
-			
+			// Remove from local state
 			projects = projects.filter(p => p.id !== project.id);
+			console.log(`Successfully deleted project: ${project.name}`);
+			
+			// Show success message
+			alert(`Project "${project.name}" has been successfully deleted.`);
+			
 		} catch (e) {
 			console.error('Failed to delete project:', e);
-			alert(`Failed to delete project: ${e instanceof Error ? e.message : 'Unknown error'}`);
+			const errorMessage = e instanceof Error ? e.message : 'Unknown error occurred';
+			alert(`Failed to delete project "${project.name}":\n\n${errorMessage}\n\nPlease try again or contact support if the problem persists.`);
 		}
 	}
 	
@@ -128,14 +141,14 @@
 		<!-- Search Bar -->
 		<div class="relative flex-1">
 			<label for="project-search" class="sr-only">
-				Search projects by name, owner, or repository
+				Search projects by name, owner, repository, provider, or model
 			</label>
 			<input
 				id="project-search"
 				type="text"
 				bind:value={searchQuery}
-				placeholder="Search projects by name, owner, or repository..."
-				aria-label="Search projects by name, owner, or repository"
+				placeholder="Search projects by name, owner, repository, provider, or model..."
+				aria-label="Search projects by name, owner, repository, provider, or model"
 				class="block w-full pl-4 pr-12 py-2.5 border border-japanese-border rounded-lg bg-japanese-card text-japanese-foreground placeholder:text-japanese-muted focus:outline-none focus:border-japanese-primary focus:ring-1 focus:ring-japanese-primary"
 			/>
 			{#if searchQuery}
@@ -190,7 +203,9 @@
 	{#if error}
 		<div class="text-center py-8">
 			<p class="text-japanese-highlight mb-4">Error loading projects: {error}</p>
-			<Button onclick={fetchProjects}>Try Again</Button>
+			<Button onclick={fetchProjects}>
+				{#snippet children()}Try Again{/snippet}
+			</Button>
 		</div>
 	{/if}
 
@@ -221,6 +236,16 @@
 								<span class="px-2 py-1 text-xs bg-japanese-background text-japanese-muted rounded-full border border-japanese-border">
 									{project.language}
 								</span>
+								{#if project.provider}
+									<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full border border-green-200">
+										{project.provider}
+									</span>
+								{/if}
+								{#if project.model}
+									<span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full border border-blue-200">
+										{project.model}
+									</span>
+								{/if}
 							</div>
 							<p class="text-xs text-japanese-muted">
 								Processed on: {formatDate(project.submittedAt)}
@@ -247,6 +272,8 @@
 								</h3>
 								<p class="text-xs text-japanese-muted mt-1">
 									Processed on: {formatDate(project.submittedAt)} • {project.repo_type} • {project.language}
+									{#if project.provider}• {project.provider}{/if}
+									{#if project.model}• {project.model}{/if}
 								</p>
 							</div>
 							<div class="flex gap-2 ml-4">
@@ -271,10 +298,32 @@
 				<path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
 				<path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"/>
 			</svg>
-			<p class="text-japanese-muted mb-4">
-				No projects found in the server cache. The cache might be empty or the server encountered an issue.
+			<h3 class="text-lg font-medium text-japanese-foreground mb-2">No Projects Found</h3>
+			<p class="text-japanese-muted mb-6 max-w-md mx-auto">
+				No processed projects found. Start by generating wiki documentation for your repositories to see them listed here.
 			</p>
-			<Button onclick={() => window.location.href = '/wiki'} aria-label="Navigate to wiki generation page">Generate Wiki</Button>
+			<div class="flex gap-3 justify-center">
+				<Button onclick={() => window.location.href = '/wiki'} aria-label="Navigate to wiki generation page">
+					{#snippet children()}
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+						</svg>
+						Generate Wiki
+					{/snippet}
+				</Button>
+				<Button 
+					variant="outline" 
+					onclick={fetchProjects} 
+					aria-label="Refresh projects list"
+				>
+					{#snippet children()}
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+						</svg>
+						Refresh
+					{/snippet}
+				</Button>
+			</div>
 		</div>
 	{/if}
 </div>

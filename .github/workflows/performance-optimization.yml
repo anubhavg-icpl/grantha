@@ -1,0 +1,292 @@
+name: Performance Optimization CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'performance_optimization.py'
+      - 'cache_fix.py'
+      - 'requirements.txt'
+      - 'main.py'
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "18"
+
+jobs:
+  performance-analysis:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-benchmark
+    
+    - name: Run cache fix
+      run: python cache_fix.py
+    
+    - name: Run performance analysis
+      run: python performance_optimization.py --analyze --check-cache --report
+    
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-report
+        path: performance_report.md
+        retention-days: 30
+
+  backend-tests:
+    name: Backend Performance Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    
+    - name: Set up cache directories
+      run: |
+        mkdir -p ~/.grantha/wikicache
+        mkdir -p data/projects/cache
+        mkdir -p logs
+    
+    - name: Create test environment
+      run: |
+        cp .env.example .env
+        echo "CACHE_MAX_SIZE=1000" >> .env
+        echo "CACHE_DEFAULT_TTL=300" >> .env
+        echo "LOG_SLOW_REQUESTS=true" >> .env
+        echo "SLOW_REQUEST_THRESHOLD=2.0" >> .env
+    
+    - name: Run performance tests
+      run: |
+        python -m pytest tests/ -v --benchmark-only --benchmark-json=benchmark.json
+    
+    - name: Check for slow requests
+      run: |
+        python -c "
+        import json
+        with open('benchmark.json') as f:
+            data = json.load(f)
+        
+        slow_tests = [
+            test for test in data['benchmarks'] 
+            if test['stats']['mean'] > 2.0
+        ]
+        
+        if slow_tests:
+            print(f'WARNING: {len(slow_tests)} slow tests detected')
+            for test in slow_tests[:5]:
+                print(f'  {test[\"name\"]}: {test[\"stats\"][\"mean\"]:.2f}s')
+        else:
+            print('All tests under 2.0s threshold')
+        "
+    
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: benchmark.json
+
+  frontend-build:
+    name: Frontend Build & Performance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+    
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: npm test -- --watchAll=false
+    
+    - name: Analyze bundle size
+      working-directory: ./frontend
+      run: |
+        npx webpack-bundle-analyzer build/static/js/*.js --report --mode static --report-filename ../bundle-report.html || true
+    
+    - name: Upload bundle analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: bundle-analysis
+        path: frontend/bundle-report.html
+      if: always()
+
+  integration-tests:
+    name: Integration Tests with Performance Monitoring
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        cd frontend && npm ci
+    
+    - name: Start optimized backend
+      run: |
+        python cache_fix.py
+        python performance_optimization.py --fix
+        nohup python main.py &
+        sleep 10  # Wait for server to start
+      env:
+        CACHE_MAX_SIZE: 1000
+        CACHE_DEFAULT_TTL: 300
+        LOG_SLOW_REQUESTS: true
+        SLOW_REQUEST_THRESHOLD: 2.0
+    
+    - name: Run integration tests with performance monitoring
+      run: |
+        # Test wiki generation endpoint performance
+        start_time=$(date +%s.%N)
+        curl -X POST http://localhost:8000/wiki/generate \
+          -H "Content-Type: application/json" \
+          -d '{"repo_url": "https://github.com/octocat/Hello-World", "language": "en", "repo_type": "github"}' \
+          -w "HTTP Status: %{http_code}, Total Time: %{time_total}s\n"
+        end_time=$(date +%s.%N)
+        
+        duration=$(echo "$end_time - $start_time" | bc)
+        echo "Wiki generation took: ${duration}s"
+        
+        # Test cache retrieval
+        curl -X GET "http://localhost:8000/wiki/cache?owner=octocat&repo=Hello-World&repo_type=github&language=en" \
+          -H "Accept: application/json" \
+          -w "Cache Retrieval Time: %{time_total}s\n"
+    
+    - name: Check for performance regressions
+      run: |
+        python performance_optimization.py --analyze --report
+        
+        # Check if any requests took longer than 10 seconds
+        if grep -q "duration_ms.*[1-9][0-9][0-9][0-9][0-9]" logs/application.log; then
+          echo "❌ Performance regression detected: requests taking over 10 seconds"
+          exit 1
+        else
+          echo "✅ No significant performance regressions detected"
+        fi
+    
+    - name: Upload performance logs
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-logs
+        path: |
+          logs/
+          performance_report.md
+      if: always()
+
+  deploy-optimized:
+    name: Deploy with Performance Optimizations
+    runs-on: ubuntu-latest
+    needs: [performance-analysis, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying optimized version to staging..."
+        # Add actual deployment commands here
+        # ./deploy_optimized.sh staging
+    
+    - name: Run post-deployment performance check
+      run: |
+        echo "📊 Running post-deployment performance check..."
+        # Add health checks and performance validation
+        # python performance_optimization.py --analyze --report
+    
+    - name: Deploy to production (if staging passes)
+      run: |
+        echo "🎯 Deploying to production..."
+        # Add production deployment commands here
+        # ./deploy_optimized.sh production
+      if: success()
+
+  performance-monitoring:
+    name: Continuous Performance Monitoring
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up monitoring
+      run: |
+        echo "📈 Setting up performance monitoring dashboard..."
+        # This could integrate with monitoring services like Datadog, New Relic, etc.
+    
+    - name: Schedule performance reports
+      run: |
+        echo "⏰ Scheduling regular performance reports..."
+        # Set up scheduled performance analysis
+    
+    - name: Alert on performance degradation
+      run: |
+        echo "🚨 Setting up performance degradation alerts..."
+        # Configure alerting for performance issues

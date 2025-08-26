@@ -270,3 +270,6 @@ test_*.py
 !Makefile
 !pytest.ini
 !.github/
+cache_fix.py
+deploy_optimized.sh
+performance_optimization.py

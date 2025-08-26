@@ -490,13 +490,12 @@ function optimizedFunction() {
       <h2 class="text-xl font-semibold mb-6">Quick Start Templates</h2>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {#each agentTemplates as template}
-          {@const Icon = template.icon}
           <button
             onclick={() => useTemplate(template)}
             class="group bg-card border border-border rounded-xl p-6 hover:shadow-lg hover:border-primary transition-all text-left"
           >
             <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <Icon class="w-7 h-7 text-primary" />
+              <svelte:component this={template.icon} class="w-7 h-7 text-primary" />
             </div>
             <h3 class="font-semibold mb-2">{template.name}</h3>
             <p class="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
@@ -515,21 +514,18 @@ function optimizedFunction() {
           <h2 class="text-xl font-semibold mb-6">Your Agents</h2>
           <div class="grid gap-4">
             {#each agents as agent}
-              {@const AgentIcon = getAgentIcon(agent.type)}
-              {@const StatusIcon = getStatusIcon(agent.status)}
-              
               <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all {selectedAgent?.id === agent.id ? 'ring-2 ring-primary' : ''}">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-start gap-3">
                     <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <AgentIcon class="w-6 h-6 text-primary" />
+                      <svelte:component this={getAgentIcon(agent.type)} class="w-6 h-6 text-primary" />
                     </div>
                     <div class="flex-1">
                       <h3 class="font-semibold text-lg">{agent.name}</h3>
                       <p class="text-sm text-muted-foreground">{agent.description}</p>
                       <div class="flex items-center gap-3 mt-2">
                         <div class="flex items-center gap-1">
-                          <StatusIcon class="w-4 h-4 {getStatusColor(agent.status)}" />
+                          <svelte:component this={getStatusIcon(agent.status)} class="w-4 h-4 {getStatusColor(agent.status)}" />
                           <span class="text-xs {getStatusColor(agent.status)} capitalize">{agent.status}</span>
                         </div>
                         {#if agent.lastRun}
@@ -579,14 +575,12 @@ function optimizedFunction() {
                 <!-- Capabilities -->
                 <div class="flex flex-wrap gap-2">
                   {#each agent.capabilities.slice(0, 4) as capId}
-                    {@const capability = capabilities.find(c => c.id === capId)}
-                    {#if capability}
-                      {@const CapIcon = capability.icon}
+                    {#each capabilities.filter(c => c.id === capId) as capability}
                       <span class="flex items-center gap-1 px-2 py-1 text-xs bg-secondary/50 text-secondary-foreground rounded-full">
-                        <CapIcon class="w-3 h-3" />
+                        <svelte:component this={capability.icon} class="w-3 h-3" />
                         {capability.name}
                       </span>
-                    {/if}
+                    {/each}
                   {/each}
                   {#if agent.capabilities.length > 4}
                     <span class="px-2 py-1 text-xs bg-muted text-muted-foreground rounded-full">
@@ -597,8 +591,7 @@ function optimizedFunction() {
                 
                 <!-- Running progress -->
                 {#if agent.status === 'running'}
-                  {@const runningTask = tasks.find(t => t.agentId === agent.id && t.status === 'running')}
-                  {#if runningTask}
+                  {#each tasks.filter(t => t.agentId === agent.id && t.status === 'running') as runningTask}
                     <div class="mt-4">
                       <div class="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>{runningTask.title}</span>
@@ -611,7 +604,7 @@ function optimizedFunction() {
                         ></div>
                       </div>
                     </div>
-                  {/if}
+                  {/each}
                 {/if}
               </div>
             {/each}
@@ -639,9 +632,8 @@ function optimizedFunction() {
           <div class="bg-card border border-border rounded-lg p-6">
             <div class="mb-6">
               <div class="flex items-center gap-3 mb-3">
-                {@const Icon = getAgentIcon(selectedAgent.type)}
                 <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Icon class="w-5 h-5 text-primary" />
+                  <svelte:component this={getAgentIcon(selectedAgent.type)} class="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 class="font-semibold">{selectedAgent.name}</h3>
@@ -754,175 +746,327 @@ function optimizedFunction() {
 
   <!-- Create/Edit Agent Modal -->
   {#if showCreateModal || editingAgent}
-    {@const isEditing = !!editingAgent}
-    {@const agent = editingAgent || newAgent}
-    
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}>
-      <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-semibold">{isEditing ? 'Edit Agent' : selectedTemplate ? `Create from Template: ${selectedTemplate.name}` : 'Create Custom Agent'}</h2>
-            <p class="text-sm text-muted-foreground mt-1">Configure your AI agent's capabilities and settings</p>
-          </div>
-          <button
-            onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
-            class="p-2 hover:bg-accent rounded-lg transition-colors"
-          >
-            <X class="w-5 h-5" />
-          </button>
-        </div>
-        
-        <div class="grid md:grid-cols-2 gap-6">
-          <!-- Basic Info -->
-          <div class="space-y-4">
+    {#if editingAgent}
+      <!-- Edit Mode -->
+      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}>
+        <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+          <div class="flex items-center justify-between mb-6">
             <div>
-              <label class="text-sm font-medium mb-2 block">Agent Name</label>
-              <input
-                type="text"
-                bind:value={agent.name}
-                placeholder="e.g., Documentation Generator"
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+              <h2 class="text-xl font-semibold">Edit Agent</h2>
+              <p class="text-sm text-muted-foreground mt-1">Configure your AI agent's capabilities and settings</p>
             </div>
-            
-            <div>
-              <label class="text-sm font-medium mb-2 block">Description</label>
-              <textarea
-                bind:value={agent.description}
-                placeholder="What does this agent do?"
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                rows="3"
-              />
-            </div>
-            
-            <div>
-              <label class="text-sm font-medium mb-2 block">Agent Type</label>
-              <select
-                bind:value={agent.type}
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="wiki">Wiki Generator</option>
-                <option value="docs">Documentation</option>
-                <option value="research">Research</option>
-                <option value="code">Code Analysis</option>
-                <option value="fullstack">Full-Stack Dev</option>
-                <option value="security">Security</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
+            <button
+              onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+              class="p-2 hover:bg-accent rounded-lg transition-colors"
+            >
+              <X class="w-5 h-5" />
+            </button>
           </div>
           
-          <!-- Configuration -->
-          <div class="space-y-4">
-            <div>
-              <label class="text-sm font-medium mb-2 block">AI Provider</label>
-              <select
-                bind:value={agent.config.provider}
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="openai">OpenAI</option>
-                <option value="google">Google</option>
-                <option value="anthropic">Anthropic</option>
-                <option value="groq">Groq</option>
-                <option value="deepseek">DeepSeek</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="text-sm font-medium mb-2 block">Model</label>
-              <select
-                bind:value={agent.config.model}
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gemini-pro">Gemini Pro</option>
-                <option value="claude-3-opus">Claude 3 Opus</option>
-                <option value="deepseek-coder">DeepSeek Coder</option>
-              </select>
-            </div>
-            
-            <div>
-              <label class="text-sm font-medium mb-2 flex justify-between">
-                <span>Temperature</span>
-                <span class="text-primary font-mono">{agent.config.temperature?.toFixed(1)}</span>
-              </label>
-              <input
-                type="range"
-                bind:value={agent.config.temperature}
-                min="0"
-                max="2"
-                step="0.1"
-                class="w-full accent-primary"
-              />
-              <div class="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>Precise</span>
-                <span>Creative</span>
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Basic Info -->
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium mb-2 block">Agent Name</label>
+                <input
+                  type="text"
+                  bind:value={editingAgent.name}
+                  placeholder="e.g., Documentation Generator"
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Description</label>
+                <textarea
+                  bind:value={editingAgent.description}
+                  placeholder="What does this agent do?"
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows="3"
+                />
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Agent Type</label>
+                <select
+                  bind:value={editingAgent.type}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="wiki">Wiki Generator</option>
+                  <option value="docs">Documentation</option>
+                  <option value="research">Research</option>
+                  <option value="code">Code Analysis</option>
+                  <option value="fullstack">Full-Stack Dev</option>
+                  <option value="security">Security</option>
+                  <option value="custom">Custom</option>
+                </select>
               </div>
             </div>
             
-            <div>
-              <label class="text-sm font-medium mb-2 block">Output Format</label>
-              <select
-                bind:value={agent.config.outputFormat}
-                class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="markdown">Markdown</option>
-                <option value="json">JSON</option>
-                <option value="html">HTML</option>
-                <option value="pdf">PDF</option>
-              </select>
+            <!-- Configuration -->
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium mb-2 block">AI Provider</label>
+                <select
+                  bind:value={editingAgent.config.provider}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="google">Google</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="groq">Groq</option>
+                  <option value="deepseek">DeepSeek</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Model</label>
+                <select
+                  bind:value={editingAgent.config.model}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gemini-pro">Gemini Pro</option>
+                  <option value="claude-3-opus">Claude 3 Opus</option>
+                  <option value="deepseek-coder">DeepSeek Coder</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 flex justify-between">
+                  <span>Temperature</span>
+                  <span class="text-primary font-mono">{editingAgent.config.temperature?.toFixed(1)}</span>
+                </label>
+                <input
+                  type="range"
+                  bind:value={editingAgent.config.temperature}
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  class="w-full accent-primary"
+                />
+                <div class="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Precise</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Output Format</label>
+                <select
+                  bind:value={editingAgent.config.outputFormat}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="markdown">Markdown</option>
+                  <option value="json">JSON</option>
+                  <option value="html">HTML</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Capabilities -->
-        <div class="mt-6">
-          <label class="text-sm font-medium mb-3 block">Capabilities</label>
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {#each capabilities as capability}
-              {@const Icon = capability.icon}
-              <button
-                onclick={() => {
-                  if (isEditing && editingAgent) {
+          
+          <!-- Capabilities -->
+          <div class="mt-6">
+            <label class="text-sm font-medium mb-3 block">Capabilities</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {#each capabilities as capability}
+                <button
+                  onclick={() => {
                     const index = editingAgent.capabilities.indexOf(capability.id);
                     if (index === -1) {
                       editingAgent.capabilities = [...editingAgent.capabilities, capability.id];
                     } else {
                       editingAgent.capabilities = editingAgent.capabilities.filter(c => c !== capability.id);
                     }
-                  } else {
-                    toggleCapability(capability.id);
-                  }
-                }}
-                class="flex items-center gap-2 p-3 border rounded-lg transition-all {agent.capabilities.includes(capability.id) 
-                  ? 'bg-primary/10 border-primary text-primary' 
-                  : 'border-border hover:bg-accent'}"
-              >
-                <Icon class="w-4 h-4" />
-                <div class="text-left flex-1">
-                  <div class="text-sm font-medium">{capability.name}</div>
-                </div>
-              </button>
-            {/each}
+                  }}
+                  class="flex items-center gap-2 p-3 border rounded-lg transition-all {editingAgent.capabilities.includes(capability.id) 
+                    ? 'bg-primary/10 border-primary text-primary' 
+                    : 'border-border hover:bg-accent'}"
+                >
+                  <svelte:component this={capability.icon} class="w-4 h-4" />
+                  <div class="text-left flex-1">
+                    <div class="text-sm font-medium">{capability.name}</div>
+                  </div>
+                </button>
+              {/each}
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+              class="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onclick={updateAgent}
+              class="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            >
+              Update Agent
+            </button>
           </div>
         </div>
-        
-        <div class="mt-6 flex justify-end gap-2">
-          <button
-            onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
-            class="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onclick={() => isEditing ? updateAgent() : createAgent()}
-            class="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-          >
-            {isEditing ? 'Update Agent' : 'Create Agent'}
-          </button>
+      </div>
+    {:else}
+      <!-- Create Mode -->
+      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}>
+        <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-semibold">{selectedTemplate ? `Create from Template: ${selectedTemplate.name}` : 'Create Custom Agent'}</h2>
+              <p class="text-sm text-muted-foreground mt-1">Configure your AI agent's capabilities and settings</p>
+            </div>
+            <button
+              onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+              class="p-2 hover:bg-accent rounded-lg transition-colors"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div class="grid md:grid-cols-2 gap-6">
+            <!-- Basic Info -->
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium mb-2 block">Agent Name</label>
+                <input
+                  type="text"
+                  bind:value={newAgent.name}
+                  placeholder="e.g., Documentation Generator"
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Description</label>
+                <textarea
+                  bind:value={newAgent.description}
+                  placeholder="What does this agent do?"
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  rows="3"
+                />
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Agent Type</label>
+                <select
+                  bind:value={newAgent.type}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="wiki">Wiki Generator</option>
+                  <option value="docs">Documentation</option>
+                  <option value="research">Research</option>
+                  <option value="code">Code Analysis</option>
+                  <option value="fullstack">Full-Stack Dev</option>
+                  <option value="security">Security</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Configuration -->
+            <div class="space-y-4">
+              <div>
+                <label class="text-sm font-medium mb-2 block">AI Provider</label>
+                <select
+                  bind:value={newAgent.config.provider}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="google">Google</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="groq">Groq</option>
+                  <option value="deepseek">DeepSeek</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Model</label>
+                <select
+                  bind:value={newAgent.config.model}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gemini-pro">Gemini Pro</option>
+                  <option value="claude-3-opus">Claude 3 Opus</option>
+                  <option value="deepseek-coder">DeepSeek Coder</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 flex justify-between">
+                  <span>Temperature</span>
+                  <span class="text-primary font-mono">{newAgent.config.temperature?.toFixed(1)}</span>
+                </label>
+                <input
+                  type="range"
+                  bind:value={newAgent.config.temperature}
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  class="w-full accent-primary"
+                />
+                <div class="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Precise</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+              
+              <div>
+                <label class="text-sm font-medium mb-2 block">Output Format</label>
+                <select
+                  bind:value={newAgent.config.outputFormat}
+                  class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="markdown">Markdown</option>
+                  <option value="json">JSON</option>
+                  <option value="html">HTML</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Capabilities -->
+          <div class="mt-6">
+            <label class="text-sm font-medium mb-3 block">Capabilities</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {#each capabilities as capability}
+                <button
+                  onclick={() => toggleCapability(capability.id)}
+                  class="flex items-center gap-2 p-3 border rounded-lg transition-all {newAgent.capabilities.includes(capability.id) 
+                    ? 'bg-primary/10 border-primary text-primary' 
+                    : 'border-border hover:bg-accent'}"
+                >
+                  <svelte:component this={capability.icon} class="w-4 h-4" />
+                  <div class="text-left flex-1">
+                    <div class="text-sm font-medium">{capability.name}</div>
+                  </div>
+                </button>
+              {/each}
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+              class="px-4 py-2 text-sm border border-border rounded-lg hover:bg-accent transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onclick={createAgent}
+              class="px-6 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            >
+              Create Agent
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    {/if}
   {/if}
 </div>

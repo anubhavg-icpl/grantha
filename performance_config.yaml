@@ -1,0 +1,79 @@
+# Grantha Performance Configuration
+# This file contains optimized settings for addressing performance issues
+
+# Cache Configuration
+cache:
+  # Wiki cache settings
+  wiki_cache:
+    ttl: 86400  # 24 hours in seconds
+    max_size: 1000  # Maximum number of cached wiki entries
+    directory: "~/.grantha/wikicache"
+    
+  # Project cache settings  
+  project_cache:
+    ttl: 43200  # 12 hours in seconds
+    max_size: 500   # Maximum number of cached projects
+    directory: "data/projects/cache"
+    
+  # Memory cache settings (for middleware)
+  memory_cache:
+    default_ttl: 1800  # 30 minutes in seconds
+    max_size: 2000     # Maximum number of cached items
+    
+# Performance Monitoring
+monitoring:
+  slow_request_threshold: 5.0  # Log requests slower than 5 seconds
+  log_slow_requests: true
+  enable_performance_headers: true
+  
+# Server Configuration
+server:
+  workers: 4
+  timeout: 120
+  keepalive: 2
+  max_requests: 1000
+  max_requests_jitter: 50
+  
+# Wiki Generation Optimization
+wiki_generation:
+  enable_repository_download: true
+  download_timeout: 300  # 5 minutes
+  max_file_size: 10485760  # 10MB
+  excluded_directories:
+    - node_modules
+    - .git
+    - dist
+    - build
+    - __pycache__
+    - .venv
+    - venv
+    - .pytest_cache
+  excluded_extensions:
+    - .pyc
+    - .pyo
+    - .log
+    - .tmp
+    - .cache
+    
+# Logging Configuration
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  files:
+    application: "logs/application.log"
+    performance: "logs/performance.log"
+    access: "logs/access.log"
+    error: "logs/error.log"
+    
+# Development vs Production Settings
+environments:
+  development:
+    cache_ttl_multiplier: 0.5  # Shorter cache for development
+    enable_debug_headers: true
+    reload: false  # Disabled for better performance testing
+    
+  production:
+    cache_ttl_multiplier: 2.0  # Longer cache for production  
+    enable_debug_headers: false
+    workers: 8
+    timeout: 300

@@ -368,7 +368,7 @@ npm run dev
 
 ```bash
 # Check backend is running
-curl http://localhost:8000/api/auth/status
+curl http://localhost:8000/auth/status
 
 # Verify proxy configuration in vite.config.ts
 ```

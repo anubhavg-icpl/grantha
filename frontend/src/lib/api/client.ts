@@ -210,17 +210,25 @@ class APIClient {
     return this.request("/models/config");
   }
 
-  // Legacy model methods - not implemented in backend
+  // Legacy model methods - deprecated, use getModelConfig() instead
   async getModels(): Promise<Model[]> {
-    throw new Error(
-      "Individual models endpoint not implemented in backend API. Use getModelConfig() instead.",
-    );
+    // Extract models from provider config for backward compatibility
+    const config = await this.getModelConfig();
+    return config.providers.flatMap(provider => provider.models);
   }
 
   async getModel(modelId: string): Promise<Model> {
-    throw new Error(
-      "Single model endpoint not implemented in backend API. Use getModelConfig() instead.",
-    );
+    // Extract specific model from provider config for backward compatibility
+    const config = await this.getModelConfig();
+    const model = config.providers
+      .flatMap(provider => provider.models)
+      .find(m => m.id === modelId);
+    
+    if (!model) {
+      throw new Error(`Model ${modelId} not found`);
+    }
+    
+    return model;
   }
 
   // Wiki methods - Updated to match backend API
@@ -274,11 +282,35 @@ class APIClient {
     });
   }
 
-  // Legacy wiki methods - not implemented in backend
+  // Wiki cache retrieval method - matches OpenAPI spec
+  async getWikiCache(params: {
+    owner: string;
+    repo: string;
+    repo_type?: string;
+    language?: string;
+  }): Promise<any> {
+    const searchParams = new URLSearchParams({
+      owner: params.owner,
+      repo: params.repo,
+      repo_type: params.repo_type || "github",
+      language: params.language || "en"
+    });
+    
+    return this.request(`/wiki/cache?${searchParams}`);
+  }
+
+  // Legacy wiki methods - deprecated, use specific wiki endpoints instead
   async getWikiEntries(): Promise<WikiEntry[]> {
-    throw new Error(
-      "Wiki entries list endpoint not implemented in backend API. Use generateWiki() instead.",
-    );
+    // Use the new wiki projects endpoint for backward compatibility
+    const projects = await this.getWikiProjects();
+    return projects.map(project => ({
+      id: project.id,
+      title: project.name,
+      content: `Wiki for ${project.name}`,
+      created_at: project.submittedAt,
+      updated_at: project.submittedAt,
+      tags: [project.repo_type, project.language]
+    }));
   }
 
   async createWikiEntry(
@@ -382,6 +414,11 @@ class APIClient {
   // Project management methods
   async getProcessedProjects(): Promise<ProcessedProjectEntry[]> {
     return this.request("/api/processed_projects");
+  }
+
+  // Wiki projects endpoint - matches OpenAPI spec
+  async getWikiProjects(): Promise<ProcessedProjectEntry[]> {
+    return this.request("/wiki/projects");
   }
 
   async saveProcessedProject(request: {
