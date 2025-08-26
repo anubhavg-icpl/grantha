@@ -1,41 +1,59 @@
 <!doctype html>
 <html lang="en" class="%sveltekit.theme%">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="description" content="Grantha - Advanced AI Platform for Documentation, Chat, and Research" />
-		<meta name="keywords" content="AI, Documentation, Chat, Research, LLM, API" />
-		<meta name="author" content="Grantha Team" />
-		
-		<!-- Open Graph / Facebook -->
-		<meta property="og:type" content="website" />
-		<meta property="og:title" content="Grantha - AI Platform" />
-		<meta property="og:description" content="Advanced AI Platform for Documentation, Chat, and Research" />
-		<meta property="og:image" content="%sveltekit.assets%/og-image.png" />
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Grantha - Advanced AI Platform for Documentation, Chat, and Research"
+    />
+    <meta
+      name="keywords"
+      content="AI, Documentation, Chat, Research, LLM, API"
+    />
+    <meta name="author" content="Grantha Team" />
 
-		<!-- Twitter -->
-		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:title" content="Grantha - AI Platform" />
-		<meta property="twitter:description" content="Advanced AI Platform for Documentation, Chat, and Research" />
-		<meta property="twitter:image" content="%sveltekit.assets%/twitter-image.png" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Grantha - AI Platform" />
+    <meta
+      property="og:description"
+      content="Advanced AI Platform for Documentation, Chat, and Research"
+    />
+    <meta property="og:image" content="%sveltekit.assets%/og-image.png" />
 
-		<!-- Preload critical resources -->
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<!-- Japanese-friendly fonts aligning with deepwiki-open -->
-		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
-		<style>
-			:root {
-				--font-geist-sans: 'Noto Sans JP', 'Inter', sans-serif;
-				--font-serif-jp: 'Noto Serif JP', serif;
-				--font-geist-mono: 'Geist Mono', monospace;
-			}
-		</style>
-		
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover" class="font-sans antialiased">
-		<div style="display: contents" class="app">%sveltekit.body%</div>
-	</body>
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="Grantha - AI Platform" />
+    <meta
+      property="twitter:description"
+      content="Advanced AI Platform for Documentation, Chat, and Research"
+    />
+    <meta
+      property="twitter:image"
+      content="%sveltekit.assets%/twitter-image.png"
+    />
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Japanese-friendly fonts aligning with deepwiki-open -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;700&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --font-geist-sans: "Noto Sans JP", "Inter", sans-serif;
+        --font-serif-jp: "Noto Serif JP", serif;
+        --font-geist-mono: "Geist Mono", monospace;
+      }
+    </style>
+
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover" class="font-sans antialiased">
+    <div style="display: contents" class="app">%sveltekit.body%</div>
+  </body>
 </html>

@@ -203,7 +203,7 @@
 							id="notifications"
 							type="checkbox"
 							bind:checked={settings.notifications}
-							class="rounded border-input"
+							class="w-4 h-4 text-primary bg-background border-input rounded focus:ring-primary focus:ring-2 focus:ring-offset-2"
 						/>
 					</div>
 
@@ -220,7 +220,7 @@
 							id="autoSave"
 							type="checkbox"
 							bind:checked={settings.autoSave}
-							class="rounded border-input"
+							class="w-4 h-4 text-primary bg-background border-input rounded focus:ring-primary focus:ring-2 focus:ring-offset-2"
 						/>
 					</div>
 				</div>
@@ -245,9 +245,11 @@
 							max="8192"
 							step="256"
 							bind:value={settings.maxTokens}
+							aria-label="Max tokens: {settings.maxTokens}"
+							aria-describedby="maxTokens-range"
 							class="w-full"
 						/>
-						<div class="flex justify-between text-xs text-muted-foreground mt-1">
+						<div id="maxTokens-range" class="flex justify-between text-xs text-muted-foreground mt-1">
 							<span>1K</span>
 							<span>8K</span>
 						</div>
@@ -264,9 +266,11 @@
 							max="2"
 							step="0.1"
 							bind:value={settings.temperature}
+							aria-label="Temperature: {settings.temperature}"
+							aria-describedby="temperature-range"
 							class="w-full"
 						/>
-						<div class="flex justify-between text-xs text-muted-foreground mt-1">
+						<div id="temperature-range" class="flex justify-between text-xs text-muted-foreground mt-1">
 							<span>Focused</span>
 							<span>Creative</span>
 						</div>

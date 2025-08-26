@@ -22,7 +22,7 @@ rollupOptions: {
     // Manual chunk configuration
     manualChunks: {
       vendor: ['svelte'],                           // Core framework
-      ui: ['lucide-svelte', 'bits-ui'],            // UI components  
+      ui: ['lucide-svelte', 'bits-ui'],            // UI components
       forms: ['formsnap', 'sveltekit-superforms'], // Form handling
       utils: ['clsx', 'tailwind-merge']            // Utilities
     }
@@ -33,7 +33,7 @@ rollupOptions: {
 ### Bundle Analysis
 
 - **Vendor chunk**: Core Svelte framework (~50KB gzipped)
-- **UI chunk**: Icon and component libraries (~30KB gzipped) 
+- **UI chunk**: Icon and component libraries (~30KB gzipped)
 - **Forms chunk**: Form validation and handling (~25KB gzipped)
 - **Utils chunk**: CSS and utility functions (~10KB gzipped)
 
@@ -44,9 +44,13 @@ rollupOptions: {
 ```typescript
 // utils/lazy-loader.ts
 export const routeLazyLoaders = {
-  ChatArea: createLazyLoader(() => import('$components/chat/ChatArea.svelte')),
-  ResearchView: createLazyLoader(() => import('$components/research/ResearchView.svelte')),
-  WikiEditor: createLazyLoader(() => import('$components/wiki/WikiEditor.svelte'))
+  ChatArea: createLazyLoader(() => import("$components/chat/ChatArea.svelte")),
+  ResearchView: createLazyLoader(
+    () => import("$components/research/ResearchView.svelte"),
+  ),
+  WikiEditor: createLazyLoader(
+    () => import("$components/wiki/WikiEditor.svelte"),
+  ),
 };
 ```
 
@@ -57,7 +61,7 @@ export const routeLazyLoaders = {
   import LazyComponent from '$lib/components/ui/LazyComponent.svelte';
 </script>
 
-<LazyComponent 
+<LazyComponent
   importFn={() => import('$components/chat/ChatArea.svelte')}
   componentName="ChatArea"
   loadOnMount={false}
@@ -83,22 +87,22 @@ Components load when they become visible in the viewport:
 const monitor = LazyLoadPerformanceMonitor.getInstance();
 
 // Track component loading times
-monitor.startLoad('ChatArea');
+monitor.startLoad("ChatArea");
 // ... component loads
-monitor.endLoad('ChatArea');
+monitor.endLoad("ChatArea");
 
 // Get metrics
 const avgTime = monitor.getAverageLoadTime();
-const componentTime = monitor.getLoadTime('ChatArea');
+const componentTime = monitor.getLoadTime("ChatArea");
 ```
 
 ### Component Preloading
 
 ```typescript
-import { componentPreloader } from '$utils/lazy-loader';
+import { componentPreloader } from "$utils/lazy-loader";
 
 // Preload on navigation hover
-componentPreloader.onNavigationHover('/chat');
+componentPreloader.onNavigationHover("/chat");
 
 // Preload during idle time
 componentPreloader.preloadOnIdle();
@@ -109,12 +113,14 @@ componentPreloader.preloadOnIdle();
 ### Development vs Production
 
 **Development**:
+
 - Source maps enabled
 - Hot module replacement
 - No compression
 - Detailed error messages
 
 **Production**:
+
 - Source maps disabled
 - Tree shaking enabled
 - Minification and compression
@@ -144,13 +150,14 @@ build: {
 Each route lazy loads its specific components:
 
 - `/chat` → ChatArea, ChatInput, ModelSelector
-- `/research` → ResearchView, ModelSelector  
+- `/research` → ResearchView, ModelSelector
 - `/wiki` → WikiEditor
 - `/projects` → ProcessedProjects
 
 ### Shared Components
 
 Common components are included in the main bundle:
+
 - Layout components (Header, Sidebar)
 - UI primitives (Button, Input, Card)
 - Authentication components
@@ -161,13 +168,14 @@ Common components are included in the main bundle:
 
 ```typescript
 // Service worker caching (future implementation)
-const CACHE_NAME = 'grantha-v1';
-const STATIC_ASSETS = ['/chunks/', '/assets/', '/favicon.ico'];
+const CACHE_NAME = "grantha-v1";
+const STATIC_ASSETS = ["/chunks/", "/assets/", "/favicon.ico"];
 ```
 
 ### API Response Caching
 
 Frontend respects backend cache headers:
+
 - `Cache-Control` headers from API
 - `ETag` support for conditional requests
 - Local storage for user preferences
@@ -177,7 +185,7 @@ Frontend respects backend cache headers:
 ### Core Web Vitals Targets
 
 - **LCP (Largest Contentful Paint)**: < 2.5s
-- **FID (First Input Delay)**: < 100ms  
+- **FID (First Input Delay)**: < 100ms
 - **CLS (Cumulative Layout Shift)**: < 0.1
 
 ### Bundle Size Targets
@@ -192,13 +200,13 @@ Frontend respects backend cache headers:
 
 ```typescript
 // Track route performance
-performance.mark('route-start');
+performance.mark("route-start");
 // Route loads
-performance.mark('route-end');
-performance.measure('route-load', 'route-start', 'route-end');
+performance.mark("route-end");
+performance.measure("route-load", "route-start", "route-end");
 
 // Get timing data
-const timing = performance.getEntriesByType('measure');
+const timing = performance.getEntriesByType("measure");
 ```
 
 ### User Experience Metrics
@@ -221,10 +229,10 @@ const timing = performance.getEntriesByType('measure');
 
 ```typescript
 // Lazy image loading
-import { lazyLoadImage } from '$utils/lazy-loader';
+import { lazyLoadImage } from "$utils/lazy-loader";
 
 const img = new Image();
-lazyLoadImage(img, '/path/to/image.jpg');
+lazyLoadImage(img, "/path/to/image.jpg");
 ```
 
 ### Font Loading
@@ -232,32 +240,36 @@ lazyLoadImage(img, '/path/to/image.jpg');
 ```css
 /* Font display optimization */
 @font-face {
-  font-family: 'Inter';
+  font-family: "Inter";
   font-display: swap; /* Prevent invisible text */
-  src: url('/fonts/inter.woff2') format('woff2');
+  src: url("/fonts/inter.woff2") format("woff2");
 }
 ```
 
 ## Future Optimizations
 
 ### Service Workers
+
 - Cache API responses
 - Background sync
 - Push notifications
 - Offline functionality
 
 ### Advanced Code Splitting
+
 - Dynamic imports based on user behavior
 - Predictive loading
 - Progressive enhancement
 
 ### Asset Optimization
+
 - Image format optimization (WebP/AVIF)
 - CSS purging
 - Font subsetting
 - SVG optimization
 
 ### Performance Budget
+
 - Bundle size monitoring
 - Performance regression testing
 - Automated lighthouse audits
@@ -272,7 +284,7 @@ lazyLoadImage(img, '/path/to/image.jpg');
 npm run build
 npx vite-bundle-analyzer dist
 
-# Performance testing  
+# Performance testing
 npm run test:performance
 ```
 
@@ -305,6 +317,7 @@ VITE_PERFORMANCE_DEBUG=true npm run dev
 ```
 
 This will log:
+
 - Component load times
 - Bundle chunk loading
 - Cache hit/miss ratios

@@ -127,10 +127,15 @@
 	<div class="mb-6 flex flex-col sm:flex-row gap-4">
 		<!-- Search Bar -->
 		<div class="relative flex-1">
+			<label for="project-search" class="sr-only">
+				Search projects by name, owner, or repository
+			</label>
 			<input
+				id="project-search"
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Search projects by name, owner, or repository..."
+				aria-label="Search projects by name, owner, or repository"
 				class="block w-full pl-4 pr-12 py-2.5 border border-japanese-border rounded-lg bg-japanese-card text-japanese-foreground placeholder:text-japanese-muted focus:outline-none focus:border-japanese-primary focus:ring-1 focus:ring-japanese-primary"
 			/>
 			{#if searchQuery}
@@ -269,7 +274,7 @@
 			<p class="text-japanese-muted mb-4">
 				No projects found in the server cache. The cache might be empty or the server encountered an issue.
 			</p>
-			<Button onclick={() => window.location.href = '/wiki'}>Generate Wiki</Button>
+			<Button onclick={() => window.location.href = '/wiki'} aria-label="Navigate to wiki generation page">Generate Wiki</Button>
 		</div>
 	{/if}
 </div>

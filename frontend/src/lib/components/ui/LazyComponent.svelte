@@ -4,19 +4,30 @@
 	import LoadingSpinner from './LoadingSpinner.svelte';
 	import type { ComponentType } from 'svelte';
 
-	// Props
-	export let importFn: () => Promise<{ default: ComponentType<any> }>;
-	export let props: Record<string, any> = {};
-	export let loadOnMount: boolean = false;
-	export let threshold: number = 0.1;
-	export let rootMargin: string = '50px';
-	export let delay: number = 0;
-	export let componentName: string = 'UnknownComponent';
+	interface Props {
+		importFn: () => Promise<{ default: ComponentType<any> }>;
+		props?: Record<string, any>;
+		loadOnMount?: boolean;
+		threshold?: number;
+		rootMargin?: string;
+		delay?: number;
+		componentName?: string;
+	}
+
+	let {
+		importFn,
+		props = {},
+		loadOnMount = false,
+		threshold = 0.1,
+		rootMargin = '50px',
+		delay = 0,
+		componentName = 'UnknownComponent'
+	}: Props = $props();
 
 	// State
-	let isLoading = false;
-	let error: string | null = null;
-	let component: ComponentType<any> | null = null;
+	let isLoading = $state(false);
+	let error: string | null = $state(null);
+	let component: ComponentType<any> | null = $state(null);
 	let containerElement: HTMLElement;
 
 	// Performance monitoring
@@ -73,7 +84,7 @@
 			<p class="text-red-600 text-xs mt-1">{error}</p>
 			<button 
 				class="mt-2 px-3 py-1 text-xs bg-red-100 hover:bg-red-200 rounded"
-				on:click={loadComponent}
+				onclick={loadComponent}
 			>
 				Retry
 			</button>
@@ -84,7 +95,7 @@
 			<span class="ml-2 text-sm text-gray-600">Loading {componentName}...</span>
 		</div>
 	{:else if component}
-		<svelte:component this={component} {...props} />
+		<component {...props}></component>
 	{:else}
 		<div class="placeholder-container p-4 bg-gray-50 rounded-lg">
 			<div class="animate-pulse">

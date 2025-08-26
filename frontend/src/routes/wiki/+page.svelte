@@ -222,10 +222,14 @@
 			
 			<div class="flex items-center space-x-3">
 				<div class="relative">
-					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
 					<Input
+						id="wiki-search"
 						placeholder="Search wikis..."
 						bind:value={searchQuery}
+						label="Search wikis"
+						hideLabel={true}
+						aria-label="Search wikis"
 						class="pl-10 w-64"
 					/>
 				</div>

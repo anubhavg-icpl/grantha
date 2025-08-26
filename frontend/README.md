@@ -5,6 +5,7 @@ A comprehensive SvelteKit frontend for the Grantha AI platform, featuring modern
 ## 🚀 Features
 
 ### Core Functionality
+
 - **Authentication System** - Secure API key validation with persistent sessions
 - **Real-time Chat** - WebSocket-powered streaming chat interface with multiple conversations
 - **Model Management** - Dynamic AI model configuration and provider selection
@@ -14,6 +15,7 @@ A comprehensive SvelteKit frontend for the Grantha AI platform, featuring modern
 - **Simple Operations** - Quick AI interactions and RAG functionality
 
 ### Technical Features
+
 - **SvelteKit 2** - Modern full-stack framework with SSR/SPA capabilities
 - **TypeScript** - Full type safety with auto-generated API types
 - **Tailwind CSS** - Utility-first styling with shadcn-ui components
@@ -26,6 +28,7 @@ A comprehensive SvelteKit frontend for the Grantha AI platform, featuring modern
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 frontend/
 ├── src/
@@ -50,6 +53,7 @@ frontend/
 ```
 
 ### State Management
+
 The application uses Svelte stores for reactive state management:
 
 - **authState** - Authentication status and user session
@@ -58,6 +62,7 @@ The application uses Svelte stores for reactive state management:
 - **wsClient** - WebSocket connection and real-time updates
 
 ### API Integration
+
 Type-safe API client generated from Python Pydantic models:
 
 ```typescript
@@ -74,10 +79,12 @@ for await (const chunk of apiClient.streamChatCompletion(request)) {
 ## 📦 Installation
 
 ### Prerequisites
+
 - Node.js 18+ and npm/pnpm/yarn
 - Grantha API backend running on `http://localhost:8000`
 
 ### Setup
+
 ```bash
 # Navigate to frontend directory
 cd frontend
@@ -92,6 +99,7 @@ npm run dev
 ```
 
 ### Production Build
+
 ```bash
 # Build for production
 npm run build
@@ -106,6 +114,7 @@ npm run build && npm run export
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create a `.env` file for custom configuration:
 
 ```bash
@@ -121,11 +130,13 @@ PUBLIC_APP_VERSION=1.0.0
 ```
 
 ### Development Proxy
+
 The Vite dev server proxies `/api` requests to `http://localhost:8000` by default. Modify `vite.config.ts` to change the backend URL.
 
 ## 🎨 UI Components
 
 ### Design System
+
 The frontend uses a cohesive design system based on shadcn-ui:
 
 - **Colors** - Semantic color tokens with dark/light mode support
@@ -136,19 +147,23 @@ The frontend uses a cohesive design system based on shadcn-ui:
 ### Key Components
 
 #### Authentication
+
 - `AuthGuard` - Protects routes requiring authentication
 - `AuthDialog` - Modal for API key validation
 
 #### Chat Interface
+
 - `ChatArea` - Message display with streaming support
 - `ChatInput` - Message input with keyboard shortcuts
 - `ChatSidebar` - Conversation history and management
 
 #### Models
+
 - `ModelSelector` - Provider and model selection interface
 - Advanced configuration for custom models
 
 #### Layout
+
 - `AppLayout` - Main application shell
 - `Sidebar` - Navigation and feature access
 - `Header` - Top bar with theme toggle and user menu
@@ -156,6 +171,7 @@ The frontend uses a cohesive design system based on shadcn-ui:
 ## 🔌 API Integration
 
 ### Endpoints Covered
+
 All Grantha API endpoints are integrated:
 
 - **Authentication** (`/auth`) - Status check and validation
@@ -166,6 +182,7 @@ All Grantha API endpoints are integrated:
 - **Simple** (`/simple`) - Quick operations and RAG
 
 ### WebSocket Events
+
 Real-time communication supports:
 
 - Chat message streaming
@@ -176,44 +193,48 @@ Real-time communication supports:
 ## 🎯 Usage Examples
 
 ### Starting a Chat
+
 ```typescript
-import { chatActions } from '$stores/chat';
+import { chatActions } from "$stores/chat";
 
 // Create new conversation
-const conversationId = chatActions.createConversation('My Chat');
+const conversationId = chatActions.createConversation("My Chat");
 
 // Send message with streaming
-await chatActions.sendMessage('Hello, how can you help me?', true);
+await chatActions.sendMessage("Hello, how can you help me?", true);
 ```
 
 ### Configuring Models
+
 ```typescript
-import { modelsActions } from '$stores/models';
+import { modelsActions } from "$stores/models";
 
 // Load available models
 await modelsActions.loadConfig();
 
 // Select provider and model
-modelsActions.setProvider('openai');
-modelsActions.setModel('gpt-4');
+modelsActions.setProvider("openai");
+modelsActions.setModel("gpt-4");
 ```
 
 ### WebSocket Communication
+
 ```typescript
-import { wsClient } from '$api/websocket';
+import { wsClient } from "$api/websocket";
 
 // Connect to WebSocket
 await wsClient.connect();
 
 // Subscribe to chat streams
-const unsubscribe = wsClient.subscribe('chat_stream', (data) => {
-  console.log('Received:', data.content);
+const unsubscribe = wsClient.subscribe("chat_stream", (data) => {
+  console.log("Received:", data.content);
 });
 ```
 
 ## 🧪 Development
 
 ### Scripts
+
 ```bash
 # Development
 npm run dev          # Start dev server
@@ -232,12 +253,14 @@ npm run test:watch   # Watch mode tests
 ```
 
 ### Code Style
+
 - **ESLint** - JavaScript/TypeScript linting
 - **Prettier** - Code formatting
 - **TypeScript** - Strict type checking
 - **Conventional Commits** - Commit message format
 
 ### Testing
+
 The project supports Vitest for unit testing:
 
 ```bash
@@ -254,6 +277,7 @@ npm run test:coverage
 ## 🚀 Production Deployment
 
 ### Docker Support
+
 ```dockerfile
 # Multi-stage build
 FROM node:18-alpine AS builder
@@ -273,6 +297,7 @@ CMD ["node", "build"]
 ```
 
 ### Static Hosting
+
 For static deployments (Netlify, Vercel, GitHub Pages):
 
 ```bash
@@ -285,6 +310,7 @@ npm run build
 ```
 
 ### Server Deployment
+
 For server-side rendering:
 
 ```bash
@@ -298,6 +324,7 @@ node build/index.js
 ## 📊 Performance
 
 ### Optimizations
+
 - **Code Splitting** - Automatic route-based splitting
 - **Tree Shaking** - Dead code elimination
 - **Bundle Analysis** - Vite bundle analyzer
@@ -305,6 +332,7 @@ node build/index.js
 - **Caching** - Aggressive caching strategies
 
 ### Metrics
+
 - **Lighthouse Score** - 95+ performance score
 - **Bundle Size** - < 500KB gzipped
 - **First Load** - < 2s on 3G
@@ -313,6 +341,7 @@ node build/index.js
 ## 🔒 Security
 
 ### Measures
+
 - **CSP Headers** - Content Security Policy
 - **XSS Protection** - Input sanitization
 - **CSRF Protection** - Token-based protection
@@ -324,6 +353,7 @@ node build/index.js
 ### Common Issues
 
 #### Build Errors
+
 ```bash
 # Clear node_modules and reinstall
 rm -rf node_modules package-lock.json
@@ -335,6 +365,7 @@ npm run dev
 ```
 
 #### API Connection Issues
+
 ```bash
 # Check backend is running
 curl http://localhost:8000/api/auth/status
@@ -343,6 +374,7 @@ curl http://localhost:8000/api/auth/status
 ```
 
 #### WebSocket Connection
+
 ```bash
 # Test WebSocket endpoint
 wscat -c ws://localhost:8000/ws
@@ -351,6 +383,7 @@ wscat -c ws://localhost:8000/ws
 ## 🤝 Contributing
 
 ### Development Workflow
+
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit changes (`git commit -m 'feat: add amazing feature'`)
@@ -358,6 +391,7 @@ wscat -c ws://localhost:8000/ws
 5. Open Pull Request
 
 ### Guidelines
+
 - Follow TypeScript best practices
 - Add tests for new features
 - Update documentation

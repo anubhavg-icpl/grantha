@@ -230,6 +230,32 @@ docker-compose.override.yml
 .azure/
 .gcp/
 
+# Performance & test results
+performance_results/
+test_results/
+*.test.log
+
+# Generated reports
+*_REPORT.md
+*_SUMMARY.md
+INTEGRATION_TEST_REPORT.md
+PERFORMANCE_OPTIMIZATION_REPORT.md
+PROJECT_MANAGEMENT_SUMMARY.md
+STREAMING_IMPLEMENTATION_SUMMARY.md
+
+# Test files
+test_*.py
+!tests/**/*.py
+
+# Cache directories
+~/.grantha/
+.grantha/
+
+# Build artifacts
+*.map
+*.chunk.js
+*.chunk.css
+
 # =========================
 # Keep These Files
 # =========================
@@ -244,4 +270,3 @@ docker-compose.override.yml
 !Makefile
 !pytest.ini
 !.github/
-INTEGRATION_TEST_REPORT.md

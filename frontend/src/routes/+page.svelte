@@ -146,13 +146,13 @@
 				cutting-edge technology with thoughtful design.
 			</p>
 			<div class="flex flex-col sm:flex-row gap-4 justify-center">
-				<Button size="lg" class="text-lg px-8" onclick={() => window.location.href='/chat'}>
-					<MessageSquare class="mr-2 h-5 w-5" />
+				<Button size="lg" class="text-lg px-8" onclick={() => window.location.href='/chat'} aria-label="Navigate to chat page">
+					<MessageSquare class="mr-2 h-5 w-5" aria-hidden="true" />
 					Start Chatting
-					<ArrowRight class="ml-2 h-5 w-5" />
+					<ArrowRight class="ml-2 h-5 w-5" aria-hidden="true" />
 				</Button>
-				<Button variant="outline" size="lg" class="text-lg px-8" onclick={() => window.location.href='/docs'}>
-					<FileText class="mr-2 h-5 w-5" />
+				<Button variant="outline" size="lg" class="text-lg px-8" onclick={() => window.location.href='/docs'} aria-label="Navigate to documentation page">
+					<FileText class="mr-2 h-5 w-5" aria-hidden="true" />
 					View Documentation
 				</Button>
 			</div>
@@ -348,26 +348,26 @@
 			<p class="text-japanese-muted">Jump into any feature to get started immediately</p>
 		</div>
 		<div class="flex flex-wrap justify-center gap-3">
-			<button class="btn-japanese flex items-center text-lg px-6 py-3" onclick={() => window.location.href='/chat'}>
-				<MessageSquare class="mr-2 h-5 w-5" />
+			<a href="/chat" class="btn-japanese flex items-center text-lg px-6 py-3 no-underline">
+				<MessageSquare class="mr-2 h-5 w-5" aria-hidden="true" />
 				New Chat
-			</button>
-			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/wiki'}>
-				<BookOpen class="mr-2 h-5 w-5" />
+			</a>
+			<a href="/wiki" class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg no-underline">
+				<BookOpen class="mr-2 h-5 w-5" aria-hidden="true" />
 				Generate Wiki
-			</button>
-			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/projects'}>
-				<FolderOpen class="mr-2 h-5 w-5" />
+			</a>
+			<a href="/projects" class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg no-underline">
+				<FolderOpen class="mr-2 h-5 w-5" aria-hidden="true" />
 				View Projects
-			</button>
-			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/research'}>
-				<Search class="mr-2 h-5 w-5" />
+			</a>
+			<a href="/research" class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg no-underline">
+				<Search class="mr-2 h-5 w-5" aria-hidden="true" />
 				Start Research
-			</button>
-			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/models'}>
-				<Brain class="mr-2 h-5 w-5" />
+			</a>
+			<a href="/models" class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg no-underline">
+				<Brain class="mr-2 h-5 w-5" aria-hidden="true" />
 				Configure Models
-			</button>
+			</a>
 		</div>
 	</div>
 

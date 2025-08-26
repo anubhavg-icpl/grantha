@@ -1,10 +1,10 @@
 // Error handling store for global error management
-import { writable } from 'svelte/store';
+import { writable } from "svelte/store";
 
 export interface AppError {
   id: string;
   message: string;
-  type: 'error' | 'warning' | 'info' | 'success';
+  type: "error" | "warning" | "info" | "success";
   timestamp: number;
   autoHide?: boolean;
   duration?: number;
@@ -15,25 +15,29 @@ const createErrorStore = () => {
 
   return {
     subscribe,
-    
+
     // Add an error
-    add: (message: string, type: AppError['type'] = 'error', options: Partial<AppError> = {}) => {
+    add: (
+      message: string,
+      type: AppError["type"] = "error",
+      options: Partial<AppError> = {},
+    ) => {
       const error: AppError = {
         id: `error_${Date.now()}_${Math.random().toString(36).slice(2)}`,
         message,
         type,
         timestamp: Date.now(),
-        autoHide: type !== 'error',
+        autoHide: type !== "error",
         duration: 5000,
-        ...options
+        ...options,
       };
 
-      update(errors => [...errors, error]);
+      update((errors) => [...errors, error]);
 
       // Auto-hide non-error messages
       if (error.autoHide) {
         setTimeout(() => {
-          update(errors => errors.filter(e => e.id !== error.id));
+          update((errors) => errors.filter((e) => e.id !== error.id));
         }, error.duration);
       }
 
@@ -42,7 +46,7 @@ const createErrorStore = () => {
 
     // Remove an error
     remove: (id: string) => {
-      update(errors => errors.filter(error => error.id !== id));
+      update((errors) => errors.filter((error) => error.id !== id));
     },
 
     // Clear all errors
@@ -51,23 +55,23 @@ const createErrorStore = () => {
     },
 
     // Clear errors by type
-    clearByType: (type: AppError['type']) => {
-      update(errors => errors.filter(error => error.type !== type));
-    }
+    clearByType: (type: AppError["type"]) => {
+      update((errors) => errors.filter((error) => error.type !== type));
+    },
   };
 };
 
 export const errorStore = createErrorStore();
 
 // Convenience functions
-export const showError = (message: string, options?: Partial<AppError>) => 
-  errorStore.add(message, 'error', options);
+export const showError = (message: string, options?: Partial<AppError>) =>
+  errorStore.add(message, "error", options);
 
-export const showWarning = (message: string, options?: Partial<AppError>) => 
-  errorStore.add(message, 'warning', options);
+export const showWarning = (message: string, options?: Partial<AppError>) =>
+  errorStore.add(message, "warning", options);
 
-export const showInfo = (message: string, options?: Partial<AppError>) => 
-  errorStore.add(message, 'info', options);
+export const showInfo = (message: string, options?: Partial<AppError>) =>
+  errorStore.add(message, "info", options);
 
-export const showSuccess = (message: string, options?: Partial<AppError>) => 
-  errorStore.add(message, 'success', options);
+export const showSuccess = (message: string, options?: Partial<AppError>) =>
+  errorStore.add(message, "success", options);

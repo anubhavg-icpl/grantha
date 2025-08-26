@@ -26,6 +26,9 @@
 	let message = $state('');
 	let textareaElement: HTMLTextAreaElement;
 
+	// Generate unique ID for accessibility
+	const textareaId = `chat-input-${crypto.randomUUID()}`;
+
 	function handleSubmit() {
 		const trimmedMessage = message.trim();
 		if (!trimmedMessage || disabled || loading) return;
@@ -83,7 +86,11 @@
 
 	<!-- Input area -->
 	<div class="relative rounded-lg border border-input bg-background focus-within:ring-1 focus-within:ring-ring">
+		<label for={textareaId} class="sr-only">
+			Type your message
+		</label>
 		<textarea
+			id={textareaId}
 			bind:this={textareaElement}
 			bind:value={message}
 			onkeydown={handleKeyDown}
@@ -91,6 +98,8 @@
 			{placeholder}
 			{disabled}
 			rows="1"
+			aria-label="Type your message"
+			aria-describedby="chat-hints"
 			class="w-full resize-none bg-transparent px-3 py-3 pr-20 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 			style="min-height: 44px; max-height: 120px;"
 		></textarea>
@@ -136,7 +145,7 @@
 	</div>
 
 	<!-- Hints -->
-	<div class="flex items-center justify-between text-xs text-muted-foreground">
+	<div id="chat-hints" class="flex items-center justify-between text-xs text-muted-foreground">
 		<div class="flex items-center space-x-4">
 			<span>Press Enter to send, Shift+Enter for new line</span>
 			{#if $chatState.isStreaming}

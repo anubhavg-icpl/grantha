@@ -29,12 +29,12 @@
 	<div class="relative w-5 h-5">
 		<!-- Sun icon (light mode) -->
 		<div class={`absolute inset-0 transition-opacity duration-300 ${isDark ? 'opacity-0' : 'opacity-100'}`}>
-			<Sun class="w-5 h-5" aria-label="Light Mode" />
+			<Sun class="w-5 h-5" aria-hidden="true" />
 		</div>
 
 		<!-- Moon icon (dark mode) -->
 		<div class={`absolute inset-0 transition-opacity duration-300 ${isDark ? 'opacity-100' : 'opacity-0'}`}>
-			<Moon class="w-5 h-5" aria-label="Dark Mode" />
+			<Moon class="w-5 h-5" aria-hidden="true" />
 		</div>
 	</div>
 </button>
