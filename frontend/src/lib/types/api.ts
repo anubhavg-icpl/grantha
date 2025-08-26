@@ -3,6 +3,18 @@
  * Generated from Python Pydantic models
  */
 
+export interface WikiPageSection {
+  title: string;
+  content?: string;
+  code_examples?: Array<{
+    language?: string;
+    code: string;
+    file_path?: string;
+    explanation?: string;
+  }>;
+  important_points?: string[];
+}
+
 export interface WikiPage {
   id: string;
   title: string;
@@ -10,6 +22,7 @@ export interface WikiPage {
   filePaths: string[];
   importance: "high" | "medium" | "low";
   relatedPages: string[];
+  sections?: WikiPageSection[];
 }
 
 export interface ProcessedProjectEntry {

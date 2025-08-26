@@ -93,58 +93,147 @@ async def handle_websocket_chat(websocket: WebSocket):
         # Get configuration
         config = get_config()
         
-        # Receive and parse the request data
-        request_data = await websocket.receive_json()
-        logger.info(f"Received WebSocket request: {request_data}")
-        
-        try:
-            request = WebSocketChatRequest(**request_data)
-        except ValidationError as e:
-            await manager.send_json(websocket, {
-                "type": "error",
-                "message": f"Invalid request format: {str(e)}"
-            })
-            await websocket.close()
-            return
-        
-        # Check if request contains very large input
-        input_too_large = False
-        if request.messages and len(request.messages) > 0:
-            last_message = request.messages[-1]
-            if last_message.content:
-                tokens = count_tokens(last_message.content)
-                logger.info(f"Request size: {tokens} tokens")
-                if tokens > 8000:
-                    logger.warning(f"Request exceeds recommended token limit ({tokens} > 8000)")
-                    input_too_large = True
-        
-        # Initialize Google Generative AI if available
+        # Configure Google API if available
         if config.google_api_key:
             genai.configure(api_key=config.google_api_key)
-            model_name = request.model or "gemini-2.0-flash-exp"
-            gemini_model = genai.GenerativeModel(model_name)
         else:
             await manager.send_json(websocket, {
                 "type": "error",
-                "message": "Google API key not configured"
+                "data": {"message": "Google API key not configured"}
             })
             await websocket.close()
             return
         
-        # Create RAG instance if repository processing is needed
-        context_text = ""
-        if request.repo_url and not input_too_large:
-            try:
-                # Initialize RAG for repository context
-                rag_instance = RAG(provider=request.provider, model=request.model)
+        # Keep connection alive and handle messages
+        while True:
+            # Receive and parse the request data
+            request_data = await websocket.receive_json()
+            logger.info(f"Received WebSocket request: {request_data}")
+            
+            # Handle simple chat messages from frontend
+            if request_data.get("type") == "chat_message":
+                # Extract the message content
+                message_data = request_data.get("data", {})
+                session_id = message_data.get("session_id", "default")
+                content = message_data.get("content", "")
                 
-                # Extract custom file filter parameters if provided
-                excluded_dirs = None
-                excluded_files = None
-                included_dirs = None
-                included_files = None
+                if not content:
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "data": {"message": "No message content provided"}
+                    })
+                    continue
                 
-                if request.excluded_dirs:
+                # Use default model settings
+                model_name = "gemini-2.0-flash-exp"
+                
+                try:
+                    # Create Gemini model
+                    gemini_model = genai.GenerativeModel(model_name)
+                    
+                    # Simple prompt without RAG for basic chat
+                    prompt = content
+                    
+                    # Generate streaming response
+                    response = gemini_model.generate_content(prompt, stream=True)
+                    
+                    # Send initial stream message
+                    await manager.send_json(websocket, {
+                        "type": "chat_stream",
+                        "data": {
+                            "session_id": session_id,
+                            "content": "",
+                            "done": False
+                        }
+                    })
+                    
+                    # Stream the response
+                    full_response = ""
+                    for chunk in response:
+                        if hasattr(chunk, 'text') and chunk.text:
+                            full_response += chunk.text
+                            await manager.send_json(websocket, {
+                                "type": "chat_stream", 
+                                "data": {
+                                    "session_id": session_id,
+                                    "content": chunk.text,
+                                    "done": False
+                                }
+                            })
+                    
+                    # Send completion message
+                    await manager.send_json(websocket, {
+                        "type": "chat_stream",
+                        "data": {
+                            "session_id": session_id,
+                            "content": "",
+                            "done": True
+                        }
+                    })
+                    
+                except Exception as e:
+                    logger.error(f"Error generating response: {str(e)}")
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "data": {"message": f"Failed to generate response: {str(e)}"}
+                    })
+                    
+            # Handle ping/pong for heartbeat
+            elif request_data.get("type") == "ping":
+                await manager.send_json(websocket, {
+                    "type": "pong",
+                    "timestamp": request_data.get("timestamp")
+                })
+                
+            # Handle complex chat requests (original format)
+            else:
+                try:
+                    request = WebSocketChatRequest(**request_data)
+                except ValidationError as e:
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "data": {"message": f"Invalid request format: {str(e)}"}
+                    })
+                    continue
+                    
+                # Check if request contains very large input
+                input_too_large = False
+                if request.messages and len(request.messages) > 0:
+                    last_message = request.messages[-1]
+                    if last_message.content:
+                        tokens = count_tokens(last_message.content)
+                        logger.info(f"Request size: {tokens} tokens")
+                        if tokens > 8000:
+                            logger.warning(f"Request exceeds recommended token limit ({tokens} > 8000)")
+                            input_too_large = True
+                
+                # Initialize Google Generative AI if available
+                if config.google_api_key:
+                    genai.configure(api_key=config.google_api_key)
+                    model_name = request.model or "gemini-2.0-flash-exp"
+                    gemini_model = genai.GenerativeModel(model_name)
+                else:
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "message": "Google API key not configured"
+                    })
+                    await websocket.close()
+                    return
+                
+                # Create RAG instance if repository processing is needed
+                context_text = ""
+                if request.repo_url and not input_too_large:
+                    try:
+                        # Initialize RAG for repository context
+                        rag_instance = RAG(provider=request.provider, model=request.model)
+                        
+                        # Extract custom file filter parameters if provided
+                        excluded_dirs = None
+                        excluded_files = None
+                        included_dirs = None
+                        included_files = None
+                        
+                        if request.excluded_dirs:
                     excluded_dirs = [unquote(dir_path) for dir_path in request.excluded_dirs.split('\n') if dir_path.strip()]
                     logger.info(f"Using custom excluded directories: {excluded_dirs}")
                 if request.excluded_files:
