@@ -161,6 +161,21 @@ export const authActions = {
   clearError(): void {
     authState.update((state) => ({ ...state, error: null }));
   },
+
+  // Set redirect path for post-login navigation
+  setRedirectPath(path: string): void {
+    authState.update((state) => ({ ...state, redirectTo: path }));
+  },
+
+  // Get and clear redirect path
+  getAndClearRedirectPath(): string | undefined {
+    const currentState = get(authState);
+    const redirectTo = currentState.redirectTo;
+    if (redirectTo) {
+      authState.update((state) => ({ ...state, redirectTo: undefined }));
+    }
+    return redirectTo;
+  },
 };
 
 // Auto-check auth status on store initialization

@@ -14,6 +14,10 @@
 	// Redirect to login if not authenticated and not already on login page
 	$effect(() => {
 		if (!$authState.isLoading && !$canAccessApp && !$page.route.id?.includes('/login')) {
+			// Save current path for post-login redirect
+			if ($page.url.pathname !== '/') {
+				authActions.setRedirectPath($page.url.pathname + $page.url.search);
+			}
 			goto('/login');
 		}
 	});
