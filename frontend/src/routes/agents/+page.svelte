@@ -247,7 +247,7 @@
   function updateAgent() {
     if (!editingAgent) return;
     
-    const index = agents.findIndex(a => a.id === editingAgent.id);
+    const index = agents.findIndex(a => a.id === editingAgent!.id);
     if (index !== -1) {
       agents[index] = { ...editingAgent };
       agents = agents;
@@ -319,7 +319,7 @@
         // Deep research
         result = await apiClient.deepResearch({
           query: taskInput.query || taskInput.description || 'Research topic',
-          type: 'comprehensive'
+          repo_url: taskInput.repoUrl || ''
         });
       } else {
         // Simulate other types
@@ -493,8 +493,10 @@ function optimizedFunction() {
             class="group bg-card border border-border rounded-xl p-6 hover:shadow-lg hover:border-primary transition-all text-left"
           >
             <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              {@const IconComponent = template.icon}
-              <IconComponent class="w-7 h-7 text-primary" />
+              {#if template.icon}
+                {@const IconComponent = template.icon}
+                <IconComponent class="w-7 h-7 text-primary" />
+              {/if}
             </div>
             <h3 class="font-semibold mb-2">{template.name}</h3>
             <p class="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
@@ -517,16 +519,20 @@ function optimizedFunction() {
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-start gap-3">
                     <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      {@const IconComponent = getAgentIcon(agent.type)}
-                      <IconComponent class="w-6 h-6 text-primary" />
+                      {#if getAgentIcon(agent.type)}
+                        {@const IconComponent = getAgentIcon(agent.type)}
+                        <IconComponent class="w-6 h-6 text-primary" />
+                      {/if}
                     </div>
                     <div class="flex-1">
                       <h3 class="font-semibold text-lg">{agent.name}</h3>
                       <p class="text-sm text-muted-foreground">{agent.description}</p>
                       <div class="flex items-center gap-3 mt-2">
                         <div class="flex items-center gap-1">
-                          {@const StatusIcon = getStatusIcon(agent.status)}
-                          <StatusIcon class="w-4 h-4 {getStatusColor(agent.status)}" />
+                          {#if getStatusIcon(agent.status)}
+                            {@const StatusIcon = getStatusIcon(agent.status)}
+                            <StatusIcon class="w-4 h-4 {getStatusColor(agent.status)}" />
+                          {/if}
                           <span class="text-xs {getStatusColor(agent.status)} capitalize">{agent.status}</span>
                         </div>
                         {#if agent.lastRun}
@@ -578,8 +584,10 @@ function optimizedFunction() {
                   {#each agent.capabilities.slice(0, 4) as capId}
                     {#each capabilities.filter(c => c.id === capId) as capability}
                       <span class="flex items-center gap-1 px-2 py-1 text-xs bg-secondary/50 text-secondary-foreground rounded-full">
-                        {@const CapIcon = capability.icon}
-                        <CapIcon class="w-3 h-3" />
+                        {#if capability.icon}
+                          {@const CapIcon = capability.icon}
+                          <CapIcon class="w-3 h-3" />
+                        {/if}
                         {capability.name}
                       </span>
                     {/each}
@@ -635,8 +643,10 @@ function optimizedFunction() {
             <div class="mb-6">
               <div class="flex items-center gap-3 mb-3">
                 <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  {@const AgentIcon = getAgentIcon(selectedAgent.type)}
-                  <AgentIcon class="w-5 h-5 text-primary" />
+                  {#if selectedAgent && getAgentIcon(selectedAgent.type)}
+                    {@const AgentIcon = getAgentIcon(selectedAgent.type)}
+                    <AgentIcon class="w-5 h-5 text-primary" />
+                  {/if}
                 </div>
                 <div>
                   <h3 class="font-semibold">{selectedAgent.name}</h3>
@@ -647,8 +657,9 @@ function optimizedFunction() {
             
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium mb-2 block">Task Name</label>
+                <label for="task-name-field" class="text-sm font-medium mb-2 block">Task Name</label>
                 <input
+                  id="task-name-field"
                   type="text"
                   bind:value={taskInput.title}
                   placeholder="e.g., Generate project documentation"
@@ -658,8 +669,9 @@ function optimizedFunction() {
               
               {#if selectedAgent.type === 'wiki' || selectedAgent.type === 'docs' || selectedAgent.type === 'code' || selectedAgent.type === 'fullstack'}
                 <div>
-                  <label class="text-sm font-medium mb-2 block">Repository URL</label>
+                  <label for="task-repo-url-field" class="text-sm font-medium mb-2 block">Repository URL</label>
                   <input
+                    id="task-repo-url-field"
                     type="text"
                     bind:value={taskInput.repoUrl}
                     placeholder="https://github.com/user/repo"
@@ -693,13 +705,14 @@ function optimizedFunction() {
               </div>
               
               <button
-                onclick={() => runAgent(selectedAgent)}
-                disabled={selectedAgent.status === 'running'}
+                onclick={() => selectedAgent && runAgent(selectedAgent)}
+                disabled={!selectedAgent || selectedAgent.status === 'running'}
                 class="w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {selectedAgent.status === 'running' ? 'Running...' : 'Run Task'}
               </button>
             </div>
+            </fieldset>
           </div>
         {:else}
           <div class="bg-card border border-border rounded-lg p-8 text-center">
@@ -760,11 +773,14 @@ function optimizedFunction() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="edit-modal-title"
+        tabindex="-1"
       >
         <div 
           class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
           onclick={(e) => e.stopPropagation()}
+          onkeydown={(e) => { if (e.key === 'Escape') e.stopPropagation(); }}
           role="document"
+          tabindex="-1"
         >
           <div class="flex items-center justify-between mb-6">
             <div>
@@ -787,7 +803,7 @@ function optimizedFunction() {
                 <input
                   id="edit-agent-name"
                   type="text"
-                  bind:value={editingAgent.name}
+                  bind:value={editingAgent!.name}
                   placeholder="e.g., Documentation Generator"
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
@@ -797,7 +813,7 @@ function optimizedFunction() {
                 <label for="edit-agent-description" class="text-sm font-medium mb-2 block">Description</label>
                 <textarea
                   id="edit-agent-description"
-                  bind:value={editingAgent.description}
+                  bind:value={editingAgent!.description}
                   placeholder="What does this agent do?"
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows="3"
@@ -808,7 +824,7 @@ function optimizedFunction() {
                 <label for="edit-agent-type" class="text-sm font-medium mb-2 block">Agent Type</label>
                 <select
                   id="edit-agent-type"
-                  bind:value={editingAgent.type}
+                  bind:value={editingAgent!.type}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="wiki">Wiki Generator</option>
@@ -828,7 +844,7 @@ function optimizedFunction() {
                 <label for="edit-agent-provider" class="text-sm font-medium mb-2 block">AI Provider</label>
                 <select
                   id="edit-agent-provider"
-                  bind:value={editingAgent.config.provider}
+                  bind:value={editingAgent!.config.provider}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="openai">OpenAI</option>
@@ -843,7 +859,7 @@ function optimizedFunction() {
                 <label for="edit-agent-model" class="text-sm font-medium mb-2 block">Model</label>
                 <select
                   id="edit-agent-model"
-                  bind:value={editingAgent.config.model}
+                  bind:value={editingAgent!.config.model}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
@@ -857,12 +873,12 @@ function optimizedFunction() {
               <div>
                 <label for="edit-agent-temperature" class="text-sm font-medium mb-2 flex justify-between">
                   <span>Temperature</span>
-                  <span class="text-primary font-mono">{editingAgent.config.temperature?.toFixed(1)}</span>
+                  <span class="text-primary font-mono">{editingAgent!.config.temperature?.toFixed(1)}</span>
                 </label>
                 <input
                   id="edit-agent-temperature"
                   type="range"
-                  bind:value={editingAgent.config.temperature}
+                  bind:value={editingAgent!.config.temperature}
                   min="0"
                   max="2"
                   step="0.1"
@@ -878,7 +894,7 @@ function optimizedFunction() {
                 <label for="edit-agent-output-format" class="text-sm font-medium mb-2 block">Output Format</label>
                 <select
                   id="edit-agent-output-format"
-                  bind:value={editingAgent.config.outputFormat}
+                  bind:value={editingAgent!.config.outputFormat}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="markdown">Markdown</option>
@@ -888,33 +904,39 @@ function optimizedFunction() {
                 </select>
               </div>
             </div>
+            </fieldset>
           </div>
           
           <!-- Capabilities -->
           <div class="mt-6">
-            <label class="text-sm font-medium mb-3 block">Capabilities</label>
+            <fieldset>
+              <legend class="text-sm font-medium mb-3 block">Capabilities</legend>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
               {#each capabilities as capability}
                 <button
                   onclick={() => {
-                    const index = editingAgent.capabilities.indexOf(capability.id);
+                    const index = editingAgent!.capabilities.indexOf(capability.id);
                     if (index === -1) {
-                      editingAgent.capabilities = [...editingAgent.capabilities, capability.id];
+                      editingAgent!.capabilities = [...editingAgent!.capabilities, capability.id];
                     } else {
-                      editingAgent.capabilities = editingAgent.capabilities.filter(c => c !== capability.id);
+                      editingAgent!.capabilities = editingAgent!.capabilities.filter(c => c !== capability.id);
                     }
                   }}
-                  class="flex items-center gap-2 p-3 border rounded-lg transition-all {editingAgent.capabilities.includes(capability.id) 
+                  class="flex items-center gap-2 p-3 border rounded-lg transition-all {editingAgent!.capabilities.includes(capability.id) 
                     ? 'bg-primary/10 border-primary text-primary' 
                     : 'border-border hover:bg-accent'}"
                 >
-                  <svelte:component this={capability.icon} class="w-4 h-4" />
+                  {#if capability.icon}
+                    {@const CapabilityIcon = capability.icon}
+                    <CapabilityIcon class="w-4 h-4" />
+                  {/if}
                   <div class="text-left flex-1">
                     <div class="text-sm font-medium">{capability.name}</div>
                   </div>
                 </button>
               {/each}
             </div>
+            </fieldset>
           </div>
           
           <div class="mt-6 flex justify-end gap-2">
@@ -942,11 +964,14 @@ function optimizedFunction() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-modal-title"
+        tabindex="-1"
       >
         <div 
           class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
           onclick={(e) => e.stopPropagation()}
+          onkeydown={(e) => { if (e.key === 'Escape') e.stopPropagation(); }}
           role="document"
+          tabindex="-1"
         >
           <div class="flex items-center justify-between mb-6">
             <div>
@@ -1070,11 +1095,13 @@ function optimizedFunction() {
                 </select>
               </div>
             </div>
+            </fieldset>
           </div>
           
           <!-- Capabilities -->
           <div class="mt-6">
-            <label class="text-sm font-medium mb-3 block">Capabilities</label>
+            <fieldset>
+              <legend class="text-sm font-medium mb-3 block">Capabilities</legend>
             <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
               {#each capabilities as capability}
                 <button
@@ -1083,13 +1110,17 @@ function optimizedFunction() {
                     ? 'bg-primary/10 border-primary text-primary' 
                     : 'border-border hover:bg-accent'}"
                 >
-                  <svelte:component this={capability.icon} class="w-4 h-4" />
+                  {#if capability.icon}
+                    {@const CapabilityIcon = capability.icon}
+                    <CapabilityIcon class="w-4 h-4" />
+                  {/if}
                   <div class="text-left flex-1">
                     <div class="text-sm font-medium">{capability.name}</div>
                   </div>
                 </button>
               {/each}
             </div>
+            </fieldset>
           </div>
           
           <div class="mt-6 flex justify-end gap-2">

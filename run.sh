@@ -55,7 +55,8 @@ start_api() {
     load_env
     echo -e "${BLUE}Starting API server on port 8000...${NC}"
     cd "$(dirname "$0")"
-    python3 -m uvicorn src.grantha.api.app:create_app --factory --reload --host 0.0.0.0 --port 8000
+    source venv/bin/activate
+    python -m uvicorn src.grantha.api.app:create_app --factory --reload --host 0.0.0.0 --port 8000
 }
 
 # Start frontend
@@ -105,7 +106,9 @@ build_frontend() {
 # Install dependencies
 install_deps() {
     echo -e "${BLUE}Installing Python dependencies...${NC}"
-    pip install -r requirements.txt 2>/dev/null || pip install uv && uv pip install -r pyproject.toml
+    cd "$(dirname "$0")"
+    source venv/bin/activate
+    pip install -r requirements.txt
     
     echo -e "${BLUE}Installing frontend dependencies...${NC}"
     cd "$(dirname "$0")/frontend"
@@ -183,6 +186,8 @@ run_tests() {
     
     # Python tests
     echo -e "${BLUE}Running Python tests...${NC}"
+    cd "$(dirname "$0")"
+    source venv/bin/activate
     pytest tests/
     
     # Frontend tests
@@ -197,6 +202,8 @@ lint() {
     
     # Python linting
     echo -e "${BLUE}Linting Python code...${NC}"
+    cd "$(dirname "$0")"
+    source venv/bin/activate
     ruff check src/ tests/ || black src/ tests/
     
     # Frontend linting

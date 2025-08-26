@@ -27,7 +27,7 @@
   } from 'lucide-svelte';
 
   // Form states
-  let loginMethod: 'credentials' | 'code' = 'credentials';
+  let loginMethod = $state<'credentials' | 'code'>('credentials');
   let formData = $state({
     username: '',
     email: '',
@@ -276,7 +276,7 @@
                 class="pl-10"
                 disabled={isLoading}
                 autofocus
-                autocomplete={getAutocomplete('username')}
+                autocomplete={getAutocomplete('username') as any}
                 onblur={() => handleFieldBlur('identity')}
                 oninput={(e) => handleFieldInput('identity', e.currentTarget.value)}
                 onkeydown={handleKeyDown}
@@ -301,7 +301,7 @@
                 error={shouldShowError('password', validationErrors, touchedFields) ? validationErrors.password : undefined}
                 class="pl-10 pr-10"
                 disabled={isLoading}
-                autocomplete={getAutocomplete('password')}
+                autocomplete={getAutocomplete('password') as any}
                 onblur={() => handleFieldBlur('password')}
                 oninput={(e) => handleFieldInput('password', e.currentTarget.value)}
                 onkeydown={handleKeyDown}

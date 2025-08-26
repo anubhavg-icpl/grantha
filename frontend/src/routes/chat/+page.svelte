@@ -224,13 +224,9 @@
           // Note: sendChatMessage signature needs to be fixed in API client
           // For now, comment out this fallback until API is properly implemented
           console.warn('HTTP fallback not available - API method needs implementation');
-          throw new Error('HTTP fallback not implemented');
-          
-          messages[messages.length - 1].content = response.content;
-          messages = messages;
+          messages[messages.length - 1].content = 'Failed to get response. Please try again.';
           isStreaming = false;
-          saveCurrentConversation();
-          updateConversationTitle();
+          // Don't save conversation or update title for failed requests
         } catch (error) {
           console.error('HTTP fallback failed:', error);
           messages[messages.length - 1].content = 'Failed to get response. Please try again.';
@@ -259,7 +255,7 @@
     event?.stopPropagation();
     try {
       await navigator.clipboard.writeText(message.content || '');
-      copiedMessageId = message.id;
+      copiedMessageId = message.id || null;
       setTimeout(() => {
         copiedMessageId = null;
       }, 2000);
@@ -624,11 +620,14 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-modal-title"
+      tabindex="-1"
     >
       <div 
         class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-md w-full" 
         onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => { if (e.key === 'Escape') e.stopPropagation(); }}
         role="document"
+        tabindex="-1"
       >
         <div class="flex items-center justify-between mb-6">
           <h2 id="settings-modal-title" class="text-lg font-semibold">Chat Settings</h2>

@@ -147,7 +147,7 @@ export function getInputType(fieldName: string): string {
 /**
  * Gets appropriate autocomplete value based on field name
  */
-export function getAutocomplete(fieldName: string): string {
+export function getAutocomplete(fieldName: string): string | undefined {
   const autocompleteMap: Record<string, string> = {
     email: 'email',
     username: 'username',
