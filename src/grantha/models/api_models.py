@@ -140,6 +140,11 @@ class LoginResponse(BaseModel):
     token_type: str = Field("bearer", description="Token type")
     expires_in: int = Field(..., description="Access token expiration time in seconds")
     user_id: str = Field(..., description="User ID")
+    username: Optional[str] = Field(None, description="Username")
+    email: Optional[str] = Field(None, description="Email address")
+    full_name: Optional[str] = Field(None, description="Full name")
+    is_verified: Optional[bool] = Field(None, description="Whether email is verified")
+    is_superuser: Optional[bool] = Field(None, description="Whether user is superuser")
 
 
 class RefreshTokenRequest(BaseModel):
@@ -263,6 +268,7 @@ class SimpleResponse(BaseModel):
 class HealthResponse(BaseModel):
     """Response model for health check."""
     status: str = Field(..., description="Health status")
+    database: Optional[Dict[str, str]] = Field(None, description="Database health status")
 
 
 class MetricsResponse(BaseModel):
@@ -284,3 +290,34 @@ class WikiGenerationResponse(BaseModel):
     message: str = Field(..., description="Status message")
     wiki_structure: Optional[Dict[str, Any]] = Field(None, description="Generated wiki structure")
     cache_path: Optional[str] = Field(None, description="Path to cached wiki data")
+
+
+# Enhanced Authentication Models
+
+class UserRegistrationRequest(BaseModel):
+    """Model for user registration requests."""
+    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
+    password: str = Field(..., min_length=6, description="Password")
+    email: Optional[str] = Field(None, description="Email address")
+    full_name: Optional[str] = Field(None, max_length=255, description="Full name")
+    bio: Optional[str] = Field(None, description="User biography")
+
+
+class UserResponse(BaseModel):
+    """Model for user information responses."""
+    id: str = Field(..., description="User ID")
+    username: str = Field(..., description="Username")
+    email: Optional[str] = Field(None, description="Email address")
+    full_name: Optional[str] = Field(None, description="Full name")
+    bio: Optional[str] = Field(None, description="User biography")
+    is_active: bool = Field(..., description="Whether user is active")
+    is_verified: bool = Field(..., description="Whether email is verified")
+    is_superuser: bool = Field(..., description="Whether user is superuser")
+    created_at: Optional[str] = Field(None, description="Account creation timestamp")
+    last_login: Optional[str] = Field(None, description="Last login timestamp")
+
+
+class ChangePasswordRequest(BaseModel):
+    """Model for password change requests."""
+    current_password: str = Field(..., description="Current password")
+    new_password: str = Field(..., min_length=6, description="New password")
