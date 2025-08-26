@@ -6,6 +6,14 @@
   import Input from '$lib/components/ui/input.svelte';
   import ThemeToggle from '$lib/components/ThemeToggle.svelte';
   import { 
+    validateForm, 
+    loginValidationRules, 
+    sanitizeInput,
+    shouldShowError,
+    debounce,
+    getAutocomplete
+  } from '$lib/utils/validation';
+  import { 
     Lock, 
     Shield, 
     Key, 
@@ -31,6 +39,7 @@
   let isLoading = $state(false);
   let formError = $state('');
   let validationErrors = $state<Record<string, string>>({});
+  let touchedFields = $state(new Set<string>());
 
   // Check if user is already authenticated
   onMount(() => {

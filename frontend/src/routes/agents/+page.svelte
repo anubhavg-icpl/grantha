@@ -670,24 +670,26 @@ function optimizedFunction() {
               
               {#if selectedAgent.type === 'research'}
                 <div>
-                  <label class="text-sm font-medium mb-2 block">Research Query</label>
+                  <label for="research-query-textarea" class="text-sm font-medium mb-2 block">Research Query</label>
                   <textarea
+                    id="research-query-textarea"
                     bind:value={taskInput.query}
                     placeholder="What would you like to research?"
                     class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     rows="3"
-                  />
+                  ></textarea>
                 </div>
               {/if}
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Instructions (Optional)</label>
+                <label for="task-instructions-textarea" class="text-sm font-medium mb-2 block">Instructions (Optional)</label>
                 <textarea
+                  id="task-instructions-textarea"
                   bind:value={taskInput.description}
                   placeholder="Additional instructions for the agent..."
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows="3"
-                />
+                ></textarea>
               </div>
               
               <button
@@ -770,8 +772,9 @@ function optimizedFunction() {
             <!-- Basic Info -->
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium mb-2 block">Agent Name</label>
+                <label for="edit-agent-name" class="text-sm font-medium mb-2 block">Agent Name</label>
                 <input
+                  id="edit-agent-name"
                   type="text"
                   bind:value={editingAgent.name}
                   placeholder="e.g., Documentation Generator"
@@ -780,18 +783,20 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Description</label>
+                <label for="edit-agent-description" class="text-sm font-medium mb-2 block">Description</label>
                 <textarea
+                  id="edit-agent-description"
                   bind:value={editingAgent.description}
                   placeholder="What does this agent do?"
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows="3"
-                />
+                ></textarea>
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Agent Type</label>
+                <label for="edit-agent-type" class="text-sm font-medium mb-2 block">Agent Type</label>
                 <select
+                  id="edit-agent-type"
                   bind:value={editingAgent.type}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -809,8 +814,9 @@ function optimizedFunction() {
             <!-- Configuration -->
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium mb-2 block">AI Provider</label>
+                <label for="edit-agent-provider" class="text-sm font-medium mb-2 block">AI Provider</label>
                 <select
+                  id="edit-agent-provider"
                   bind:value={editingAgent.config.provider}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -823,8 +829,9 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Model</label>
+                <label for="edit-agent-model" class="text-sm font-medium mb-2 block">Model</label>
                 <select
+                  id="edit-agent-model"
                   bind:value={editingAgent.config.model}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -837,11 +844,12 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 flex justify-between">
+                <label for="edit-agent-temperature" class="text-sm font-medium mb-2 flex justify-between">
                   <span>Temperature</span>
                   <span class="text-primary font-mono">{editingAgent.config.temperature?.toFixed(1)}</span>
                 </label>
                 <input
+                  id="edit-agent-temperature"
                   type="range"
                   bind:value={editingAgent.config.temperature}
                   min="0"
@@ -856,8 +864,9 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Output Format</label>
+                <label for="edit-agent-output-format" class="text-sm font-medium mb-2 block">Output Format</label>
                 <select
+                  id="edit-agent-output-format"
                   bind:value={editingAgent.config.outputFormat}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -934,8 +943,9 @@ function optimizedFunction() {
             <!-- Basic Info -->
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium mb-2 block">Agent Name</label>
+                <label for="new-agent-name" class="text-sm font-medium mb-2 block">Agent Name</label>
                 <input
+                  id="new-agent-name"
                   type="text"
                   bind:value={newAgent.name}
                   placeholder="e.g., Documentation Generator"
@@ -944,18 +954,20 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Description</label>
+                <label for="new-agent-description" class="text-sm font-medium mb-2 block">Description</label>
                 <textarea
+                  id="new-agent-description"
                   bind:value={newAgent.description}
                   placeholder="What does this agent do?"
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows="3"
-                />
+                ></textarea>
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Agent Type</label>
+                <label for="new-agent-type" class="text-sm font-medium mb-2 block">Agent Type</label>
                 <select
+                  id="new-agent-type"
                   bind:value={newAgent.type}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >

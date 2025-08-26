@@ -154,7 +154,13 @@ export const authActions = {
       ...state,
       isAuthenticated: false,
       error: null,
+      redirectTo: undefined,
     }));
+
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   },
 
   // Clear error
