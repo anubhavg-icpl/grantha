@@ -402,20 +402,25 @@
 		<div 
 			class="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
 			onclick={closePreview}
+			onkeydown={(e) => e.key === 'Escape' && closePreview()}
 			role="button"
-			tabindex="-1"
-			aria-label="Close preview"
+			tabindex="0"
+			aria-label="Close preview overlay"
 		>
 			<div 
 				class="fixed inset-x-4 top-4 bottom-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-5xl bg-background border rounded-lg shadow-lg overflow-hidden flex flex-col"
 				onclick={(e) => e.stopPropagation()}
+				onkeydown={(e) => e.stopPropagation()}
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="preview-title"
 			>
 				<!-- Header -->
 				<div class="flex items-center justify-between p-6 border-b">
 					<div class="flex items-center gap-3">
 						<BookOpen class="h-6 w-6 text-primary" />
 						<div>
-							<h2 class="text-xl font-semibold text-foreground">{previewWiki.title}</h2>
+							<h2 id="preview-title" class="text-xl font-semibold text-foreground">{previewWiki.title}</h2>
 							<p class="text-sm text-muted-foreground mt-1">{previewWiki.description}</p>
 						</div>
 					</div>

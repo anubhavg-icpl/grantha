@@ -323,9 +323,9 @@ async def handle_websocket_chat(websocket: WebSocket):
                 language_code = request.language
                 supported_langs = configs.get("lang", {}).get("supported_languages", {"en": "English"})
                 language_name = supported_langs.get(language_code, "English")
-        
-        # Create system prompt
-        system_prompt = f"""<role>
+                
+                # Create system prompt
+                system_prompt = f"""<role>
 You are an expert code analyst examining the {request.type} repository: {request.repo_url} ({repo_name}).
 You provide direct, concise, and accurate information about code repositories.
 IMPORTANT: You MUST respond in {language_name} language.
@@ -340,89 +340,89 @@ IMPORTANT: You MUST respond in {language_name} language.
 - Use concise, direct language
 - When showing code, include line numbers and file paths when relevant
 </guidelines>"""
-        
-        # Fetch file content if provided
-        file_content = ""
-        if request.filePath:
-            try:
-                file_content = get_file_content(request.repo_url, request.filePath, request.type, request.token)
-                logger.info(f"Successfully retrieved content for file: {request.filePath}")
-            except Exception as e:
-                logger.error(f"Error retrieving file content: {str(e)}")
-        
-        # Create the prompt with context
-        prompt_parts = [f"/no_think {system_prompt}"]
-        
-        # Add conversation history
-        if len(request.messages) > 1:
-            conversation_history = ""
-            for i in range(0, len(request.messages) - 1, 2):
-                if i + 1 < len(request.messages):
-                    user_msg = request.messages[i]
-                    assistant_msg = request.messages[i + 1]
-                    if user_msg.role == "user" and assistant_msg.role == "assistant":
-                        conversation_history += f"<turn>\n<user>{user_msg.content}</user>\n<assistant>{assistant_msg.content}</assistant>\n</turn>\n"
-            
-            if conversation_history:
-                prompt_parts.append(f"<conversation_history>\n{conversation_history}</conversation_history>")
-        
-        # Add file content if available
-        if file_content:
-            prompt_parts.append(f"<currentFileContent path=\"{request.filePath}\">\n{file_content}\n</currentFileContent>")
-        
-        # Add context if available
-        if context_text.strip():
-            prompt_parts.append(f"<START_OF_CONTEXT>\n{context_text}\n<END_OF_CONTEXT>")
-        else:
-            prompt_parts.append("<note>Answering without retrieval augmentation.</note>")
-        
-        # Add the query
-        prompt_parts.append(f"<query>\n{last_message.content}\n</query>\n\nAssistant: ")
-        
-        prompt = "\n\n".join(prompt_parts)
-        
-        # Generate streaming response
-        try:
-            response = gemini_model.generate_content(prompt, stream=True)
-            
-            # Stream the response
-            for chunk in response:
-                if hasattr(chunk, 'text') and chunk.text:
-                    await manager.send_text(websocket, chunk.text)
-            
-            # Close the WebSocket connection after the response is complete
-            await websocket.close()
-            
-        except Exception as e:
-            logger.error(f"Error in streaming response: {str(e)}")
-            error_message = str(e)
-            
-            # Check for token limit errors and provide fallback
-            if "maximum context length" in error_message or "token limit" in error_message or "too many tokens" in error_message:
-                logger.warning("Token limit exceeded, retrying with simplified prompt")
-                try:
-                    # Create a simplified prompt without context
-                    simplified_prompt = f"/no_think {system_prompt}\n\n"
-                    if request.filePath and file_content:
-                        simplified_prompt += f"<currentFileContent path=\"{request.filePath}\">\n{file_content}\n</currentFileContent>\n\n"
-                    simplified_prompt += "<note>Answering without retrieval augmentation due to input size constraints.</note>\n\n"
-                    simplified_prompt += f"<query>\n{last_message.content}\n</query>\n\nAssistant: "
+                
+                # Fetch file content if provided
+                file_content = ""
+                if request.filePath:
+                    try:
+                        file_content = get_file_content(request.repo_url, request.filePath, request.type, request.token)
+                        logger.info(f"Successfully retrieved content for file: {request.filePath}")
+                    except Exception as e:
+                        logger.error(f"Error retrieving file content: {str(e)}")
+                
+                # Create the prompt with context
+                prompt_parts = [f"/no_think {system_prompt}"]
+                
+                # Add conversation history
+                if len(request.messages) > 1:
+                    conversation_history = ""
+                    for i in range(0, len(request.messages) - 1, 2):
+                        if i + 1 < len(request.messages):
+                            user_msg = request.messages[i]
+                            assistant_msg = request.messages[i + 1]
+                            if user_msg.role == "user" and assistant_msg.role == "assistant":
+                                conversation_history += f"<turn>\n<user>{user_msg.content}</user>\n<assistant>{assistant_msg.content}</assistant>\n</turn>\n"
                     
-                    # Generate fallback response
-                    fallback_response = gemini_model.generate_content(simplified_prompt, stream=True)
-                    for chunk in fallback_response:
+                    if conversation_history:
+                        prompt_parts.append(f"<conversation_history>\n{conversation_history}</conversation_history>")
+                
+                # Add file content if available
+                if file_content:
+                    prompt_parts.append(f"<currentFileContent path=\"{request.filePath}\">\n{file_content}\n</currentFileContent>")
+                
+                # Add context if available
+                if context_text.strip():
+                    prompt_parts.append(f"<START_OF_CONTEXT>\n{context_text}\n<END_OF_CONTEXT>")
+                else:
+                    prompt_parts.append("<note>Answering without retrieval augmentation.</note>")
+                
+                # Add the query
+                prompt_parts.append(f"<query>\n{last_message.content}\n</query>\n\nAssistant: ")
+                
+                prompt = "\n\n".join(prompt_parts)
+                
+                # Generate streaming response
+                try:
+                    response = gemini_model.generate_content(prompt, stream=True)
+                    
+                    # Stream the response
+                    for chunk in response:
                         if hasattr(chunk, 'text') and chunk.text:
                             await manager.send_text(websocket, chunk.text)
                     
-                except Exception as e2:
-                    logger.error(f"Error in fallback streaming response: {str(e2)}")
-                    await manager.send_text(websocket, "\nI apologize, but your request is too large for me to process. Please try a shorter query or break it into smaller parts.")
-            else:
-                # For other errors, return the error message
-                await manager.send_text(websocket, f"\nError: {error_message}")
+                    # Close the WebSocket connection after the response is complete
+                    await websocket.close()
             
-            # Close the WebSocket connection after error handling
-            await websocket.close()
+                except Exception as e:
+                    logger.error(f"Error in streaming response: {str(e)}")
+                    error_message = str(e)
+                    
+                    # Check for token limit errors and provide fallback
+                    if "maximum context length" in error_message or "token limit" in error_message or "too many tokens" in error_message:
+                        logger.warning("Token limit exceeded, retrying with simplified prompt")
+                        try:
+                            # Create a simplified prompt without context
+                            simplified_prompt = f"/no_think {system_prompt}\n\n"
+                            if request.filePath and file_content:
+                                simplified_prompt += f"<currentFileContent path=\"{request.filePath}\">\n{file_content}\n</currentFileContent>\n\n"
+                            simplified_prompt += "<note>Answering without retrieval augmentation due to input size constraints.</note>\n\n"
+                            simplified_prompt += f"<query>\n{last_message.content}\n</query>\n\nAssistant: "
+                            
+                            # Generate fallback response
+                            fallback_response = gemini_model.generate_content(simplified_prompt, stream=True)
+                            for chunk in fallback_response:
+                                if hasattr(chunk, 'text') and chunk.text:
+                                    await manager.send_text(websocket, chunk.text)
+                            
+                        except Exception as e2:
+                            logger.error(f"Error in fallback streaming response: {str(e2)}")
+                            await manager.send_text(websocket, "\nI apologize, but your request is too large for me to process. Please try a shorter query or break it into smaller parts.")
+                    else:
+                        # For other errors, return the error message
+                        await manager.send_text(websocket, f"\nError: {error_message}")
+                    
+                    # Close the WebSocket connection after error handling
+                    await websocket.close()
     
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected")
