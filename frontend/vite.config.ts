@@ -50,10 +50,39 @@ export default defineConfig(({ mode }) => {
 		},
 		build: {
 			target: 'es2020',
-			sourcemap: mode === 'development'
+			sourcemap: mode === 'development',
+			// Optimize build output
+			rollupOptions: {
+				output: {
+					// Code splitting configuration
+					manualChunks: {
+						// Separate vendor libraries
+						vendor: ['svelte'],
+						ui: ['lucide-svelte', 'bits-ui', 'mode-watcher'],
+						forms: ['formsnap', 'sveltekit-superforms', 'zod'],
+						utils: ['clsx', 'tailwind-merge', 'tailwind-variants']
+					},
+					// Optimize chunk naming
+					chunkFileNames: 'chunks/[name]-[hash].js',
+					assetFileNames: 'assets/[name]-[hash].[ext]'
+				}
+			},
+			// Build optimizations
+			reportCompressedSize: false, // Faster builds
+			chunkSizeWarningLimit: 1000 // Increase chunk size warning limit
 		},
 		optimizeDeps: {
-			include: ['svelte', 'lucide-svelte']
+			include: [
+				'svelte', 
+				'lucide-svelte',
+				'bits-ui',
+				'clsx',
+				'tailwind-merge'
+			],
+			exclude: [
+				// Exclude large libraries from pre-bundling if they're only used in specific routes
+				'@tailwindcss/typography'
+			]
 		},
 		define: {
 			// Pass environment variables to the client

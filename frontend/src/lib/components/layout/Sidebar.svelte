@@ -10,7 +10,8 @@
 		Users,
 		Home,
 		FileText,
-		Zap
+		Zap,
+		FolderOpen
 	} from 'lucide-svelte';
 
 	interface Props {
@@ -23,6 +24,7 @@
 		{ name: 'Dashboard', href: '/', icon: Home },
 		{ name: 'Chat', href: '/chat', icon: MessageSquare },
 		{ name: 'Wiki', href: '/wiki', icon: BookOpen },
+		{ name: 'Projects', href: '/projects', icon: FolderOpen },
 		{ name: 'Research', href: '/research', icon: Search },
 		{ name: 'Models', href: '/models', icon: Brain },
 		{ name: 'Agents', href: '/agents', icon: Users },

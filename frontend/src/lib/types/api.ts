@@ -113,6 +113,15 @@ export interface ChatRequest {
 	max_tokens?: number;
 }
 
+export interface ChatStreamRequest {
+	messages: ChatMessage[];
+	model?: string;
+	provider?: string;
+	temperature?: number;
+	max_tokens?: number;
+	stream?: boolean;
+}
+
 export interface ChatResponse {
 	content: string;
 	model: string;

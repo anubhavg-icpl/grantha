@@ -1,17 +1,17 @@
 """Utility functions and helpers."""
 
-from .embedder import Embedder
-from .data_pipeline import DataPipeline
+from .embedder import get_embedder
+from .data_pipeline import DatabaseManager
 from .rag import RAG
-from .wiki_generator import WikiGenerator
-from .deep_research import DeepResearch
-from .simple_chat import SimpleChat
+# from .wiki_generator import WikiGenerator
+# from .deep_research import DeepResearch
+# from .simple_chat import SimpleChat
 
 __all__ = [
-    "Embedder", 
-    "DataPipeline", 
+    "get_embedder", 
+    "DatabaseManager", 
     "RAG",
-    "WikiGenerator",
-    "DeepResearch", 
-    "SimpleChat"
+    # "WikiGenerator",
+    # "DeepResearch", 
+    # "SimpleChat"
 ]

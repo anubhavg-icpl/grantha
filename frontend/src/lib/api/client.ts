@@ -8,7 +8,8 @@ import type {
   WikiEntry,
   ResearchQuery,
   ResearchResult,
-  APIError 
+  APIError,
+  ProcessedProjectEntry
 } from '../types/api.js';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -120,6 +121,46 @@ class APIClient {
       usage: typedResponse.usage,
       finish_reason: typedResponse.finish_reason
     };
+  }
+
+  // Streaming chat completion using Server-Sent Events
+  async chatCompletionStream(request: {
+    messages: any[];
+    model?: string;
+    provider?: string;
+    temperature?: number;
+    max_tokens?: number;
+  }): Promise<ReadableStream<Uint8Array>> {
+    const url = `${this.baseURL}/chat/completions/stream`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...this.getHeaders(),
+        'Accept': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+      },
+      body: JSON.stringify({
+        ...request,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        error: `HTTP ${response.status}`,
+        message: response.statusText,
+        code: response.status
+      }));
+      
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body received from streaming endpoint');
+    }
+
+    return response.body;
   }
 
   // Legacy methods for compatibility - not implemented in backend
@@ -285,6 +326,45 @@ class APIClient {
     return this.request('/simple/rag', {
       method: 'POST',
       body: JSON.stringify(request),
+    });
+  }
+
+  // Project management methods
+  async getProcessedProjects(): Promise<ProcessedProjectEntry[]> {
+    return this.request('/api/processed_projects');
+  }
+
+  async saveProcessedProject(request: {
+    owner: string;
+    repo: string;
+    repo_type?: string;
+    language?: string;
+    wiki_structure?: any;
+    generated_pages?: Record<string, any>;
+    provider?: string;
+    model?: string;
+  }): Promise<{ id: string; message: string }> {
+    return this.request('/api/processed_projects', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async deleteProjectCache(
+    owner: string,
+    repo: string,
+    repo_type: string,
+    language: string
+  ): Promise<{ message: string }> {
+    const params = new URLSearchParams({
+      owner,
+      repo,
+      repo_type,
+      language
+    });
+    
+    return this.request(`/api/wiki_cache?${params}`, {
+      method: 'DELETE',
     });
   }
 

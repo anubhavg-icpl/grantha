@@ -1,0 +1,13 @@
+Grantha API Performance Test Report
+Generated: Tue Aug 26 05:10:30 IST 2025
+API Base: http://localhost:8000
+
+Tests performed:
+1. ✅ Basic Response Time
+2. ✅ Cache Performance
+3. ✅ Rate Limiting
+4. ✅ Concurrent Load Test
+5. ✅ Performance Metrics
+6. ✅ WebSocket Connection
+
+Note: Detailed results logged to console during execution

@@ -8,7 +8,9 @@ import json
 from unittest.mock import Mock, patch, AsyncMock
 from fastapi.testclient import TestClient
 
-from api.api import app
+from src.grantha.api.app import create_app
+
+app = create_app()
 
 
 @pytest.mark.integration
@@ -25,7 +27,7 @@ class TestWebSocketEndpoints:
     def test_websocket_chat_message(self):
         """Test sending chat message via WebSocket."""
         with TestClient(app) as client:
-            with patch('api.websocket_wiki.handle_websocket_chat') as mock_handler:
+            with patch('src.grantha.api.websocket_handler.handle_websocket_chat') as mock_handler:
                 with client.websocket_connect("/ws/chat") as websocket:
                     # Send test message
                     test_message = {
@@ -43,7 +45,7 @@ class TestWebSocketEndpoints:
                         # Timeout is acceptable in mocked test environment
                         pass
 
-    @patch('api.websocket_wiki.DeepResearch')
+    @patch('src.grantha.utils.deep_research.DeepResearch')
     def test_websocket_research_request(self, mock_deep_research):
         """Test research request via WebSocket.""" 
         # Mock the research response
@@ -136,7 +138,7 @@ class TestWebSocketEndpoints:
                 except Exception:
                     pass
 
-    @patch('api.websocket_wiki.WikiGenerator')
+    @patch('src.grantha.utils.wiki_generator.WikiGenerator')
     def test_websocket_wiki_generation_request(self, mock_wiki_generator):
         """Test wiki generation request via WebSocket."""
         # Mock wiki generator
@@ -204,7 +206,7 @@ class TestWebSocketEndpoints:
                     except:
                         pass
 
-    @patch('api.websocket_wiki.logger')
+    @patch('src.grantha.api.websocket_handler.logger')
     def test_websocket_error_handling(self, mock_logger):
         """Test WebSocket error handling and logging."""
         with TestClient(app) as client:
@@ -225,7 +227,7 @@ class TestWebSocketEndpoints:
         """Test asynchronous message handling in WebSocket."""
         # This would test the actual async implementation
         # For now, just verify the endpoint exists and is accessible
-        from api.websocket_wiki import handle_websocket_chat
+        from src.grantha.api.websocket_handler import handle_websocket_chat
         
         # Mock WebSocket connection
         mock_websocket = AsyncMock()
@@ -262,8 +264,10 @@ class TestWebSocketEndpoints:
 
     def test_websocket_authentication_if_enabled(self):
         """Test WebSocket authentication when auth is enabled."""
-        with patch('api.websocket_wiki.WIKI_AUTH_MODE', True), \
-             patch('api.websocket_wiki.WIKI_AUTH_CODE', 'secret123'):
+        with patch('src.grantha.core.config.get_config') as mock_config:
+            # Mock config to enable auth
+            mock_config.return_value.wiki_auth_mode = True
+            mock_config.return_value.wiki_auth_code = 'secret123'
             
             with TestClient(app) as client:
                 with client.websocket_connect("/ws/chat") as websocket:

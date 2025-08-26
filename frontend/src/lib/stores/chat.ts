@@ -178,7 +178,7 @@ export const chatActions = {
 		};
 
 		if (useStreaming) {
-			await chatActions.sendStreamingMessage(activeId, chatRequest);
+			await chatActions.sendStreamingMessageWithFallback(activeId, chatRequest);
 		} else {
 			await chatActions.sendRegularMessage(activeId, chatRequest);
 		}
@@ -220,7 +220,7 @@ export const chatActions = {
 		}
 	},
 
-	// Send streaming message
+	// Send streaming message using Server-Sent Events
 	async sendStreamingMessage(conversationId: string, chatRequest: ChatRequest): Promise<void> {
 		chatState.update(state => ({ 
 			...state, 
@@ -230,54 +230,85 @@ export const chatActions = {
 		}));
 
 		try {
-			// Connect WebSocket if not connected
-			if (wsClient.getStatus() !== 'connected') {
-				wsClient.connect();
-			}
-
-			// Generate a session ID for this stream
-			const sessionId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-			chatState.update(state => ({ ...state, streamSessionId: sessionId }));
-
-			// Send the chat request through WebSocket
-			wsClient.send({
-				type: 'chat_stream_start',
-				data: {
-					session_id: sessionId,
-					...chatRequest
-				}
+			// Get the streaming response
+			const stream = await apiClient.chatCompletionStream({
+				messages: chatRequest.messages,
+				model: chatRequest.model,
+				provider: chatRequest.provider,
+				temperature: chatRequest.temperature,
+				max_tokens: chatRequest.max_tokens
 			});
 
-			// Subscribe to stream messages
-			const unsubscribe = wsClient.onChatStream((message) => {
-				if (message.data.session_id === sessionId) {
-					if (message.data.done) {
-						// Stream completed
-						const finalMessage: ChatMessage = {
-							role: 'assistant',
-							content: get(chatState).streamingMessage,
-							timestamp: Date.now()
-						};
-						
-						chatActions.addMessage(conversationId, finalMessage);
-						
-						chatState.update(state => ({
-							...state,
-							isStreaming: false,
-							streamingMessage: '',
-							streamSessionId: null
-						}));
-						
-						unsubscribe();
-					} else {
-						// Append to streaming message
-						chatState.update(state => ({
-							...state,
-							streamingMessage: state.streamingMessage + (message.data.content || '')
-						}));
+			const reader = stream.getReader();
+			const decoder = new TextDecoder();
+
+			try {
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					const chunk = decoder.decode(value, { stream: true });
+					const lines = chunk.split('\n');
+
+					for (const line of lines) {
+						if (line.startsWith('data: ')) {
+							const data = line.slice(6); // Remove 'data: ' prefix
+							if (data.trim() === '') continue;
+
+							try {
+								const parsed = JSON.parse(data);
+								
+								if (parsed.error) {
+									// Handle error in stream
+									chatState.update(state => ({
+										...state,
+										isStreaming: false,
+										streamingMessage: '',
+										error: parsed.error
+									}));
+									return;
+								}
+								
+								if (parsed.done) {
+									// Stream completed
+									const currentState = get(chatState);
+									const finalMessage: ChatMessage = {
+										role: 'assistant',
+										content: currentState.streamingMessage,
+										timestamp: Date.now()
+									};
+									
+									chatActions.addMessage(conversationId, finalMessage);
+									
+									// Update conversation with model info
+									chatState.update(state => ({
+										...state,
+										conversations: state.conversations.map(c => 
+											c.id === conversationId
+												? { ...c, model: parsed.model, provider: parsed.provider }
+												: c
+										),
+										isStreaming: false,
+										streamingMessage: '',
+										streamSessionId: null
+									}));
+									return;
+								} else if (parsed.content) {
+									// Append to streaming message
+									chatState.update(state => ({
+										...state,
+										streamingMessage: state.streamingMessage + parsed.content
+									}));
+								}
+							} catch (parseError) {
+								console.error('Failed to parse streaming data:', parseError, data);
+							}
+						}
 					}
 				}
-			});
+			} finally {
+				reader.releaseLock();
+			}
 
 		} catch (error) {
 			console.error('Streaming failed:', error);
@@ -288,6 +319,85 @@ export const chatActions = {
 				streamSessionId: null,
 				error: error instanceof Error ? error.message : 'Streaming failed'
 			}));
+		}
+	},
+
+	// Send streaming message with fallback to WebSocket
+	async sendStreamingMessageWithFallback(conversationId: string, chatRequest: ChatRequest): Promise<void> {
+		try {
+			// Try Server-Sent Events first
+			await chatActions.sendStreamingMessage(conversationId, chatRequest);
+		} catch (sseError) {
+			console.warn('SSE streaming failed, falling back to WebSocket:', sseError);
+			
+			// Fallback to WebSocket streaming
+			chatState.update(state => ({ 
+				...state, 
+				isStreaming: true, 
+				streamingMessage: '',
+				error: null 
+			}));
+
+			try {
+				// Connect WebSocket if not connected
+				if (wsClient.getStatus() !== 'connected') {
+					wsClient.connect();
+				}
+
+				// Generate a session ID for this stream
+				const sessionId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+				chatState.update(state => ({ ...state, streamSessionId: sessionId }));
+
+				// Send the chat request through WebSocket
+				wsClient.send({
+					type: 'chat_stream_start',
+					data: {
+						session_id: sessionId,
+						...chatRequest
+					}
+				});
+
+				// Subscribe to stream messages
+				const unsubscribe = wsClient.onChatStream((message) => {
+					if (message.data.session_id === sessionId) {
+						if (message.data.done) {
+							// Stream completed
+							const finalMessage: ChatMessage = {
+								role: 'assistant',
+								content: get(chatState).streamingMessage,
+								timestamp: Date.now()
+							};
+							
+							chatActions.addMessage(conversationId, finalMessage);
+							
+							chatState.update(state => ({
+								...state,
+								isStreaming: false,
+								streamingMessage: '',
+								streamSessionId: null
+							}));
+							
+							unsubscribe();
+						} else {
+							// Append to streaming message
+							chatState.update(state => ({
+								...state,
+								streamingMessage: state.streamingMessage + (message.data.content || '')
+							}));
+						}
+					}
+				});
+
+			} catch (wsError) {
+				console.error('WebSocket streaming also failed:', wsError);
+				chatState.update(state => ({
+					...state,
+					isStreaming: false,
+					streamingMessage: '',
+					streamSessionId: null,
+					error: 'Both streaming methods failed. Please try again.'
+				}));
+			}
 		}
 	},
 

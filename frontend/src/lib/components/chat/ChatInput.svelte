@@ -140,7 +140,7 @@
 		<div class="flex items-center space-x-4">
 			<span>Press Enter to send, Shift+Enter for new line</span>
 			{#if $chatState.isStreaming}
-				<span class="text-orange-600">• Generating response...</span>
+				<span class="text-orange-600">• Streaming response...</span>
 			{/if}
 		</div>
 		

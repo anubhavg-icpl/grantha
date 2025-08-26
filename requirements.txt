@@ -23,5 +23,12 @@ numpy>=1.24.0
 faiss-cpu>=1.7.4
 langid>=1.1.6
 
+# Performance and middleware
+slowapi>=0.1.9
+redis>=4.5.0
+cachetools>=5.0.0
+structlog>=23.1.0
+starlette-prometheus>=0.10.0
+
 # Testing (optional - install with pip install -r requirements-dev.txt)
 pytest>=7.0.0

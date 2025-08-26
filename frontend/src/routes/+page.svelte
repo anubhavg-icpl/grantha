@@ -17,12 +17,15 @@
 		Globe,
 		Cpu,
 		Database,
-		FileText
+		FileText,
+		FolderOpen
 	} from 'lucide-svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import Card from '$lib/components/ui/card.svelte';
 	import Badge from '$lib/components/ui/badge.svelte';
+	import ProcessedProjects from '$lib/components/projects/ProcessedProjects.svelte';
+	import type { ProcessedProjectEntry } from '$lib/types/api';
 
 	interface DashboardCard {
 		title: string;
@@ -46,6 +49,13 @@
 			icon: BookOpen,
 			description: 'Generate and browse documentation',
 			color: 'bg-green-500'
+		},
+		{
+			title: 'Projects',
+			href: '/projects',
+			icon: FolderOpen,
+			description: 'Manage your generated wikis and projects',
+			color: 'bg-indigo-500'
 		},
 		{
 			title: 'Research',
@@ -80,10 +90,13 @@
 	let stats = $state({
 		totalChats: 0,
 		activeModels: 0,
+		totalProjects: 0,
 		lastActivity: null as string | null
 	});
+	
+	let recentProjects = $state<ProcessedProjectEntry[]>([]);
 
-	onMount(() => {
+	onMount(async () => {
 		// Calculate stats
 		stats.totalChats = $chatState.conversations.length;
 		stats.activeModels = $modelsState.config?.providers.length || 0;
@@ -92,6 +105,18 @@
 		const lastChat = $chatState.conversations[0];
 		if (lastChat) {
 			stats.lastActivity = new Date(lastChat.updatedAt).toLocaleString();
+		}
+		
+		// Load recent projects
+		try {
+			const response = await fetch('http://localhost:8000/api/processed_projects');
+			if (response.ok) {
+				const projects = await response.json();
+				recentProjects = projects.slice(0, 3); // Show only 3 most recent
+				stats.totalProjects = projects.length;
+			}
+		} catch (error) {
+			console.error('Failed to load recent projects:', error);
 		}
 	});
 </script>
@@ -135,7 +160,7 @@
 	</div>
 
 	<!-- Stats Overview -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+	<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 		<Card class="p-6">
 			<div class="flex items-center justify-between">
 				<div>
@@ -144,6 +169,18 @@
 				</div>
 				<div class="p-3 rounded-full bg-blue-500/10">
 					<MessageSquare class="h-6 w-6 text-blue-500" />
+				</div>
+			</div>
+		</Card>
+		
+		<Card class="p-6">
+			<div class="flex items-center justify-between">
+				<div>
+					<p class="text-sm font-medium text-muted-foreground">Generated Projects</p>
+					<p class="text-3xl font-bold text-foreground">{stats.totalProjects}</p>
+				</div>
+				<div class="p-3 rounded-full bg-indigo-500/10">
+					<FolderOpen class="h-6 w-6 text-indigo-500" />
 				</div>
 			</div>
 		</Card>
@@ -174,6 +211,41 @@
 			</div>
 		</Card>
 	</div>
+
+	<!-- Recent Projects Section -->
+	{#if recentProjects.length > 0}
+		<div>
+			<div class="flex items-center justify-between mb-6">
+				<h2 class="text-2xl font-bold text-foreground font-serif">Recent Projects</h2>
+				<a href="/projects" class="text-japanese-link hover:underline flex items-center">
+					View All
+					<ArrowRight class="ml-1 h-4 w-4" />
+				</a>
+			</div>
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{#each recentProjects as project}
+					<Card class="p-4 hover:shadow-lg transition-shadow">
+						<a href="/wiki?owner={project.owner}&repo={project.repo}&type={project.repo_type}&language={project.language}" class="block">
+							<h3 class="text-lg font-semibold text-japanese-link hover:underline mb-2 truncate">
+								{project.name}
+							</h3>
+							<div class="flex flex-wrap gap-2 mb-2">
+								<Badge variant="secondary" class="text-xs">
+									{project.repo_type}
+								</Badge>
+								<Badge variant="outline" class="text-xs">
+									{project.language}
+								</Badge>
+							</div>
+							<p class="text-xs text-muted-foreground">
+								Processed: {new Date(project.submittedAt).toLocaleDateString()}
+							</p>
+						</a>
+					</Card>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Feature Cards -->
 	<div>
@@ -283,6 +355,10 @@
 			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/wiki'}>
 				<BookOpen class="mr-2 h-5 w-5" />
 				Generate Wiki
+			</button>
+			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/projects'}>
+				<FolderOpen class="mr-2 h-5 w-5" />
+				View Projects
 			</button>
 			<button class="bg-transparent border border-japanese-border text-japanese-muted hover:bg-japanese-primary/10 hover:text-japanese-primary hover:border-japanese-primary px-6 py-3 rounded transition-all duration-300 flex items-center text-lg" onclick={() => window.location.href='/research'}>
 				<Search class="mr-2 h-5 w-5" />

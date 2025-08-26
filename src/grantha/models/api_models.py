@@ -141,8 +141,19 @@ class ChatResponse(BaseModel):
     content: str
     model: str
     provider: str
+    role: str = "assistant"
     usage: Optional[Dict[str, Any]] = None
     finish_reason: Optional[str] = None
+
+
+class ChatStreamRequest(BaseModel):
+    """Model for streaming chat requests."""
+    messages: List[Dict[str, Any]]
+    model: Optional[str] = None
+    provider: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    stream: bool = True
 
 
 class SimpleRequest(BaseModel):
