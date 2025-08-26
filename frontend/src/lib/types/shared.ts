@@ -115,7 +115,7 @@ export interface UnifiedAPIError {
   message: string;
   code?: string | number;
   details?: any;
-  type?: 'client_error' | 'server_error' | 'network_error';
+  type?: "client_error" | "server_error" | "network_error";
 }
 
 // Model Configuration shared between projects
@@ -136,18 +136,22 @@ export interface UnifiedModelConfig {
 }
 
 // Export utilities for type checking
-export const isWikiPageExtended = (page: WikiPageBase): page is WikiPageExtended => {
-  return 'parentId' in page || 'isSection' in page || 'children' in page;
+export const isWikiPageExtended = (
+  page: WikiPageBase,
+): page is WikiPageExtended => {
+  return "parentId" in page || "isSection" in page || "children" in page;
 };
 
 export const isChatStreamData = (data: any): data is ChatStreamData => {
-  return data && typeof data === 'object' && 'session_id' in data && 'done' in data;
+  return (
+    data && typeof data === "object" && "session_id" in data && "done" in data
+  );
 };
 
 // Type guards for runtime validation
 export const isUnifiedAPIError = (error: any): error is UnifiedAPIError => {
-  return error && typeof error === 'object' && 'message' in error;
+  return error && typeof error === "object" && "message" in error;
 };
 
 // Re-export existing types for convenience
-export type { WikiPage, RepoInfo, ChatMessage } from './api.js';
+export type { WikiPage, RepoInfo, ChatMessage } from "./api.js";

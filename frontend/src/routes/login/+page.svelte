@@ -42,7 +42,8 @@
   // Redirect on successful authentication
   $effect(() => {
     if ($canAccessApp) {
-      goto('/');
+      const redirectTo = authActions.getAndClearRedirectPath() || '/';
+      goto(redirectTo);
     }
   });
 

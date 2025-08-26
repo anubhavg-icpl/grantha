@@ -11,7 +11,7 @@
 	let { children }: Props = $props();
 
 	// Check if we're on a page that should skip the main app layout
-	$: isLoginPage = $page.route.id?.includes('/login');
+	const isLoginPage = $derived($page.route.id?.includes('/login'));
 </script>
 
 <svelte:head>

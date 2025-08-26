@@ -46,10 +46,7 @@ class APIClient {
     return headers;
   }
 
-  async request<T>(
-    endpoint: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
     const response = await fetch(url, {
@@ -214,20 +211,20 @@ class APIClient {
   async getModels(): Promise<Model[]> {
     // Extract models from provider config for backward compatibility
     const config = await this.getModelConfig();
-    return config.providers.flatMap(provider => provider.models);
+    return config.providers.flatMap((provider) => provider.models);
   }
 
   async getModel(modelId: string): Promise<Model> {
     // Extract specific model from provider config for backward compatibility
     const config = await this.getModelConfig();
     const model = config.providers
-      .flatMap(provider => provider.models)
-      .find(m => m.id === modelId);
-    
+      .flatMap((provider) => provider.models)
+      .find((m) => m.id === modelId);
+
     if (!model) {
       throw new Error(`Model ${modelId} not found`);
     }
-    
+
     return model;
   }
 
@@ -293,9 +290,9 @@ class APIClient {
       owner: params.owner,
       repo: params.repo,
       repo_type: params.repo_type || "github",
-      language: params.language || "en"
+      language: params.language || "en",
     });
-    
+
     return this.request(`/wiki/cache?${searchParams}`);
   }
 
@@ -303,13 +300,13 @@ class APIClient {
   async getWikiEntries(): Promise<WikiEntry[]> {
     // Use the new wiki projects endpoint for backward compatibility
     const projects = await this.getWikiProjects();
-    return projects.map(project => ({
+    return projects.map((project) => ({
       id: project.id,
       title: project.name,
       content: `Wiki for ${project.name}`,
       created_at: project.submittedAt,
       updated_at: project.submittedAt,
-      tags: [project.repo_type, project.language]
+      tags: [project.repo_type, project.language],
     }));
   }
 
