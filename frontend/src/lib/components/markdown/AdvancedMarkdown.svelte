@@ -25,18 +25,8 @@
   marked.setOptions({
     gfm: true,
     breaks: true,
-    pedantic: false,
-    highlight: enableSyntaxHighlight ? (code: string, lang: string) => {
-      if (lang && Prism.languages[lang]) {
-        try {
-          return Prism.highlight(code, Prism.languages[lang], lang);
-        } catch (e) {
-          console.error('Syntax highlighting error:', e);
-        }
-      }
-      return code;
-    } : undefined
-  });
+    pedantic: false
+  } as any);
 
   // Process Mermaid diagrams
   async function processMermaidDiagrams() {

@@ -40,6 +40,7 @@
   let formError = $state('');
   let validationErrors = $state<Record<string, string>>({});
   let touchedFields = $state(new Set<string>());
+  let showSuccess = $state(false);
 
   // Check if user is already authenticated
   onMount(() => {
@@ -56,30 +57,81 @@
     }
   });
 
-  function validateForm(): boolean {
-    const errors: Record<string, string> = {};
-    
+  function validateFormData(): boolean {
     if (loginMethod === 'credentials') {
-      if (!formData.username.trim() && !formData.email.trim()) {
-        errors.identity = 'Username or email is required';
+      // For credentials mode, validate username and password
+      const rules = {
+        username: loginValidationRules.username,
+        password: loginValidationRules.password,
+      };
+
+      // Use username field for either username or email input
+      const dataToValidate = {
+        username: formData.username || formData.email,
+        password: formData.password,
+      };
+
+      const result = validateForm(dataToValidate, rules);
+      validationErrors = result.errors;
+      
+      // Map username error back to identity if needed
+      if (result.errors.username) {
+        validationErrors.identity = result.errors.username;
+        delete validationErrors.username;
       }
-      if (!formData.password.trim()) {
-        errors.password = 'Password is required';
-      } else if (formData.password.length < 3) {
-        errors.password = 'Password must be at least 3 characters';
+      
+      return result.isValid;
+    } else {
+      // For auth code mode, validate auth code
+      const rules = {
+        authCode: loginValidationRules.authCode,
+      };
+
+      const result = validateForm(formData, rules);
+      validationErrors = result.errors;
+      return result.isValid;
+    }
+  }
+
+  // Debounced validation for real-time feedback
+  const debouncedValidation = debounce(() => {
+    if (touchedFields.size > 0) {
+      validateFormData();
+    }
+  }, 300);
+
+  function handleFieldBlur(fieldName: string) {
+    touchedFields.add(fieldName);
+    touchedFields = new Set(touchedFields); // Trigger reactivity
+    validateFormData();
+  }
+
+  function handleFieldInput(fieldName: string, value: string) {
+    // Sanitize input
+    const sanitized = sanitizeInput(value);
+    
+    // Update form data
+    if (fieldName === 'identity') {
+      // Handle username/email field
+      if (sanitized.includes('@')) {
+        formData.email = sanitized;
+        formData.username = '';
+      } else {
+        formData.username = sanitized;
+        formData.email = '';
       }
     } else {
-      if (!formData.authCode.trim()) {
-        errors.authCode = 'Authorization code is required';
-      }
+      (formData as any)[fieldName] = sanitized;
     }
 
-    validationErrors = errors;
-    return Object.keys(errors).length === 0;
+    // Trigger debounced validation if field was touched
+    if (touchedFields.has(fieldName)) {
+      debouncedValidation();
+    }
   }
 
   async function handleSubmit() {
-    if (!validateForm()) return;
+    if (!validateFormData()) return;
 
     isLoading = true;
     formError = '';
@@ -90,6 +142,9 @@
         const success = await authActions.validateCode(formData.authCode.trim());
         if (!success) {
           formError = $authState.error || 'Invalid authorization code';
+        } else {
+          showSuccess = true;
+          setTimeout(() => showSuccess = false, 2000);
         }
       } else {
         // For traditional login, we'll use the auth code field as a fallback
@@ -103,7 +158,13 @@
           const passSuccess = await authActions.validateCode(formData.password);
           if (!passSuccess) {
             formError = 'Invalid credentials. Please check your username/email and password.';
+          } else {
+            showSuccess = true;
+            setTimeout(() => showSuccess = false, 2000);
           }
+        } else {
+          showSuccess = true;
+          setTimeout(() => showSuccess = false, 2000);
         }
       }
     } catch (error) {
@@ -124,6 +185,7 @@
     loginMethod = loginMethod === 'credentials' ? 'code' : 'credentials';
     formError = '';
     validationErrors = {};
+    touchedFields = new Set();
     authActions.clearError();
   }
 
@@ -138,12 +200,13 @@
 </svelte:head>
 
 <!-- Background with subtle pattern -->
-<div class="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
+<div class="login-page min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center p-4 relative overflow-hidden">
   <!-- Animated background elements -->
   <div class="absolute inset-0 overflow-hidden">
     <div class="absolute -inset-10 opacity-5">
       <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
       <div class="absolute top-3/4 right-1/4 w-96 h-96 bg-accent rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+      <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-secondary rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
     </div>
   </div>
 
@@ -209,10 +272,13 @@
                 type="text"
                 placeholder="Enter username or email"
                 bind:value={formData.username}
-                error={validationErrors.identity}
+                error={shouldShowError('identity', validationErrors, touchedFields) ? validationErrors.identity : undefined}
                 class="pl-10"
                 disabled={isLoading}
                 autofocus
+                autocomplete={getAutocomplete('username')}
+                onblur={() => handleFieldBlur('identity')}
+                oninput={(e) => handleFieldInput('identity', e.currentTarget.value)}
                 onkeydown={handleKeyDown}
               />
             </div>
@@ -232,9 +298,12 @@
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
                 bind:value={formData.password}
-                error={validationErrors.password}
+                error={shouldShowError('password', validationErrors, touchedFields) ? validationErrors.password : undefined}
                 class="pl-10 pr-10"
                 disabled={isLoading}
+                autocomplete={getAutocomplete('password')}
+                onblur={() => handleFieldBlur('password')}
+                oninput={(e) => handleFieldInput('password', e.currentTarget.value)}
                 onkeydown={handleKeyDown}
               />
               <button
@@ -265,10 +334,13 @@
                 type="password"
                 placeholder="Enter authorization code"
                 bind:value={formData.authCode}
-                error={validationErrors.authCode}
+                error={shouldShowError('authCode', validationErrors, touchedFields) ? validationErrors.authCode : undefined}
                 class="pl-10"
                 disabled={isLoading}
                 autofocus
+                autocomplete="off"
+                onblur={() => handleFieldBlur('authCode')}
+                oninput={(e) => handleFieldInput('authCode', e.currentTarget.value)}
                 onkeydown={handleKeyDown}
               />
             </div>
@@ -289,9 +361,19 @@
           <ArrowRight class="w-4 h-4 ml-2" />
         </Button>
 
+        <!-- Success display -->
+        {#if showSuccess}
+          <div class="rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 flex items-start space-x-2 animate-fade-in">
+            <CheckCircle class="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+            <p class="text-sm text-green-800 dark:text-green-200">
+              Authentication successful! Redirecting...
+            </p>
+          </div>
+        {/if}
+
         <!-- Error display -->
-        {#if formError || $authState.error}
-          <div class="rounded-md bg-destructive/10 border border-destructive/20 p-3 flex items-start space-x-2">
+        {#if (formError || $authState.error) && !showSuccess}
+          <div class="rounded-md bg-destructive/10 border border-destructive/20 p-3 flex items-start space-x-2 animate-fade-in">
             <AlertCircle class="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
             <p class="text-sm text-destructive">
               {formError || $authState.error}

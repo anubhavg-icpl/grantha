@@ -275,3 +275,4 @@ deploy_optimized.sh
 performance_optimization.py
 system-health-report.md
 verify-system.sh
+quick-recovery.sh

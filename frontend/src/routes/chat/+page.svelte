@@ -617,10 +617,21 @@
 
   <!-- Settings Modal -->
   {#if showSettings}
-    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => showSettings = false}>
-      <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-md w-full" onclick={(e) => e.stopPropagation()}>
+    <div 
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+      onclick={() => showSettings = false}
+      onkeydown={(e) => { if (e.key === 'Escape') { showSettings = false; } }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
+      <div 
+        class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-md w-full" 
+        onclick={(e) => e.stopPropagation()}
+        role="document"
+      >
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-semibold">Chat Settings</h2>
+          <h2 id="settings-modal-title" class="text-lg font-semibold">Chat Settings</h2>
           <button
             onclick={() => showSettings = false}
             class="p-1.5 hover:bg-accent rounded-lg transition-colors"

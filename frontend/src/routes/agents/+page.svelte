@@ -753,11 +753,22 @@ function optimizedFunction() {
   {#if showCreateModal || editingAgent}
     {#if editingAgent}
       <!-- Edit Mode -->
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}>
-        <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+      <div 
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+        onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+        onkeydown={(e) => { if (e.key === 'Escape') { showCreateModal = false; editingAgent = null; selectedTemplate = null; } }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-modal-title"
+      >
+        <div 
+          class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
+          onclick={(e) => e.stopPropagation()}
+          role="document"
+        >
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h2 class="text-xl font-semibold">Edit Agent</h2>
+              <h2 id="edit-modal-title" class="text-xl font-semibold">Edit Agent</h2>
               <p class="text-sm text-muted-foreground mt-1">Configure your AI agent's capabilities and settings</p>
             </div>
             <button
@@ -924,11 +935,22 @@ function optimizedFunction() {
       </div>
     {:else}
       <!-- Create Mode -->
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}>
-        <div class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick={(e) => e.stopPropagation()}>
+      <div 
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+        onclick={() => { showCreateModal = false; editingAgent = null; selectedTemplate = null; }}
+        onkeydown={(e) => { if (e.key === 'Escape') { showCreateModal = false; editingAgent = null; selectedTemplate = null; } }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-modal-title"
+      >
+        <div 
+          class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
+          onclick={(e) => e.stopPropagation()}
+          role="document"
+        >
           <div class="flex items-center justify-between mb-6">
             <div>
-              <h2 class="text-xl font-semibold">{selectedTemplate ? `Create from Template: ${selectedTemplate.name}` : 'Create Custom Agent'}</h2>
+              <h2 id="create-modal-title" class="text-xl font-semibold">{selectedTemplate ? `Create from Template: ${selectedTemplate.name}` : 'Create Custom Agent'}</h2>
               <p class="text-sm text-muted-foreground mt-1">Configure your AI agent's capabilities and settings</p>
             </div>
             <button
@@ -985,8 +1007,9 @@ function optimizedFunction() {
             <!-- Configuration -->
             <div class="space-y-4">
               <div>
-                <label class="text-sm font-medium mb-2 block">AI Provider</label>
+                <label for="new-agent-provider" class="text-sm font-medium mb-2 block">AI Provider</label>
                 <select
+                  id="new-agent-provider"
                   bind:value={newAgent.config.provider}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -999,8 +1022,9 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Model</label>
+                <label for="new-agent-model" class="text-sm font-medium mb-2 block">Model</label>
                 <select
+                  id="new-agent-model"
                   bind:value={newAgent.config.model}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -1013,11 +1037,12 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 flex justify-between">
+                <label for="new-agent-temperature" class="text-sm font-medium mb-2 flex justify-between">
                   <span>Temperature</span>
                   <span class="text-primary font-mono">{newAgent.config.temperature?.toFixed(1)}</span>
                 </label>
                 <input
+                  id="new-agent-temperature"
                   type="range"
                   bind:value={newAgent.config.temperature}
                   min="0"
@@ -1032,8 +1057,9 @@ function optimizedFunction() {
               </div>
               
               <div>
-                <label class="text-sm font-medium mb-2 block">Output Format</label>
+                <label for="new-agent-output-format" class="text-sm font-medium mb-2 block">Output Format</label>
                 <select
+                  id="new-agent-output-format"
                   bind:value={newAgent.config.outputFormat}
                   class="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
