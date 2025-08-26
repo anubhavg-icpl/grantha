@@ -137,6 +137,7 @@
 				<button
 					onclick={clearSearch}
 					class="absolute inset-y-0 right-0 flex items-center pr-3 text-japanese-muted hover:text-japanese-foreground transition-colors"
+					aria-label="Clear search"
 				>
 					<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 						<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -153,6 +154,7 @@
 					? 'bg-japanese-primary text-white' 
 					: 'text-japanese-muted hover:text-japanese-foreground hover:bg-japanese-card'}"
 				title="Card View"
+				aria-label="Card View"
 			>
 				<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 					<path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
@@ -164,6 +166,7 @@
 					? 'bg-japanese-primary text-white' 
 					: 'text-japanese-muted hover:text-japanese-foreground hover:bg-japanese-card'}"
 				title="List View"
+				aria-label="List View"
 			>
 				<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 					<path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
@@ -196,6 +199,7 @@
 							onclick={() => handleDelete(project)}
 							class="absolute top-2 right-2 text-japanese-muted hover:text-japanese-foreground"
 							title="Delete project"
+							aria-label="Delete project {project.name}"
 						>
 							<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -225,6 +229,7 @@
 							onclick={() => handleDelete(project)}
 							class="absolute top-2 right-2 text-japanese-muted hover:text-japanese-foreground"
 							title="Delete project"
+							aria-label="Delete project {project.name}"
 						>
 							<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
 								<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -264,7 +269,7 @@
 			<p class="text-japanese-muted mb-4">
 				No projects found in the server cache. The cache might be empty or the server encountered an issue.
 			</p>
-			<Button href="/wiki">Generate Wiki</Button>
+			<Button onclick={() => window.location.href = '/wiki'}>Generate Wiki</Button>
 		</div>
 	{/if}
 </div>

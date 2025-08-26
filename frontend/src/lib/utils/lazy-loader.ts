@@ -2,7 +2,7 @@
  * Lazy loading utilities for optimizing component loading
  */
 
-import type { ComponentType } from 'svelte';
+import type { ComponentType, SvelteComponent } from 'svelte';
 
 // Types for lazy loading
 export interface LazyComponentProps {
@@ -26,14 +26,14 @@ const DEFAULT_OPTIONS: Required<LazyLoadOptions> = {
 /**
  * Create a lazy loader for dynamic imports
  */
-export function createLazyLoader<T = any>(
-	importFn: () => Promise<{ default: ComponentType<T> }>,
+export function createLazyLoader<T extends Record<string, any> = Record<string, any>>(
+	importFn: () => Promise<{ default: ComponentType<SvelteComponent<T>> }>,
 	options: LazyLoadOptions = {}
 ) {
 	const opts = { ...DEFAULT_OPTIONS, ...options };
-	let loadingPromise: Promise<ComponentType<T>> | null = null;
+	let loadingPromise: Promise<ComponentType<SvelteComponent<T>>> | null = null;
 
-	return async (): Promise<ComponentType<T>> => {
+	return async (): Promise<ComponentType<SvelteComponent<T>>> => {
 		if (loadingPromise) {
 			return loadingPromise;
 		}
@@ -57,16 +57,16 @@ export function createLazyLoader<T = any>(
 /**
  * Intersection Observer based lazy loading
  */
-export function createIntersectionLazyLoader<T = any>(
-	importFn: () => Promise<{ default: ComponentType<T> }>,
+export function createIntersectionLazyLoader<T extends Record<string, any> = Record<string, any>>(
+	importFn: () => Promise<{ default: ComponentType<SvelteComponent<T>> }>,
 	options: LazyLoadOptions = {}
 ) {
 	const opts = { ...DEFAULT_OPTIONS, ...options };
 	let isLoaded = false;
-	let component: ComponentType<T> | null = null;
+	let component: ComponentType<SvelteComponent<T>> | null = null;
 
 	return {
-		async loadWhenVisible(element: HTMLElement): Promise<ComponentType<T>> {
+		async loadWhenVisible(element: HTMLElement): Promise<ComponentType<SvelteComponent<T>>> {
 			if (isLoaded && component) {
 				return component;
 			}
@@ -116,7 +116,7 @@ export function createIntersectionLazyLoader<T = any>(
 export const routeLazyLoaders = {
 	// Chat components - heavy AI interaction
 	ChatArea: createLazyLoader(
-		() => import('$components/chat/ChatArea.svelte'),
+		() => import('$components/chat/ChatArea.svelte') as any,
 		{ delay: 100 }
 	),
 	
@@ -125,27 +125,27 @@ export const routeLazyLoaders = {
 		{ delay: 50 }
 	),
 
-	// Research components - data intensive
-	ResearchView: createLazyLoader(
-		() => import('$components/research/ResearchView.svelte'),
-		{ delay: 150 }
-	),
+	// Research components - data intensive (placeholder - component doesn't exist yet)
+	// ResearchView: createLazyLoader(
+	//	() => import('$components/research/ResearchView.svelte'),
+	//	{ delay: 150 }
+	// ),
 
-	// Wiki components - content heavy
-	WikiEditor: createLazyLoader(
-		() => import('$components/wiki/WikiEditor.svelte'),
-		{ delay: 200 }
-	),
+	// Wiki components - content heavy (placeholder - component doesn't exist yet)
+	// WikiEditor: createLazyLoader(
+	//	() => import('$components/wiki/WikiEditor.svelte'),
+	//	{ delay: 200 }
+	// ),
 
 	// Model selector - API heavy
 	ModelSelector: createLazyLoader(
-		() => import('$components/models/ModelSelector.svelte'),
+		() => import('$components/models/ModelSelector.svelte') as any,
 		{ delay: 100 }
 	),
 
 	// Project components - file system heavy
 	ProcessedProjects: createLazyLoader(
-		() => import('$components/projects/ProcessedProjects.svelte'),
+		() => import('$components/projects/ProcessedProjects.svelte') as any,
 		{ delay: 150 }
 	)
 };
@@ -216,8 +216,8 @@ export class ComponentPreloader {
 	private getComponentsForRoute(routeName: string): string[] {
 		const routeComponentMap: Record<string, string[]> = {
 			'/chat': ['ChatArea', 'ChatInput', 'ModelSelector'],
-			'/research': ['ResearchView', 'ModelSelector'],
-			'/wiki': ['WikiEditor'],
+			'/research': ['ModelSelector'], // ResearchView doesn't exist yet
+			'/wiki': [], // WikiEditor doesn't exist yet
 			'/projects': ['ProcessedProjects'],
 		};
 
