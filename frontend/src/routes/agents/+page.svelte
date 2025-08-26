@@ -774,6 +774,7 @@ function optimizedFunction() {
         aria-labelledby="edit-modal-title"
         tabindex="-1"
       >
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <div 
           class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
           onclick={(e) => e.stopPropagation()}
@@ -964,6 +965,7 @@ function optimizedFunction() {
         aria-labelledby="create-modal-title"
         tabindex="-1"
       >
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <div 
           class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
           onclick={(e) => e.stopPropagation()}

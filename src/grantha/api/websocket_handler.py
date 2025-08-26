@@ -234,95 +234,95 @@ async def handle_websocket_chat(websocket: WebSocket):
                         included_files = None
                         
                         if request.excluded_dirs:
-                    excluded_dirs = [unquote(dir_path) for dir_path in request.excluded_dirs.split('\n') if dir_path.strip()]
-                    logger.info(f"Using custom excluded directories: {excluded_dirs}")
-                if request.excluded_files:
-                    excluded_files = [unquote(file_pattern) for file_pattern in request.excluded_files.split('\n') if file_pattern.strip()]
-                    logger.info(f"Using custom excluded files: {excluded_files}")
-                if request.included_dirs:
-                    included_dirs = [unquote(dir_path) for dir_path in request.included_dirs.split('\n') if dir_path.strip()]
-                    logger.info(f"Using custom included directories: {included_dirs}")
-                if request.included_files:
-                    included_files = [unquote(file_pattern) for file_pattern in request.included_files.split('\n') if file_pattern.strip()]
-                    logger.info(f"Using custom included files: {included_files}")
+                            excluded_dirs = [unquote(dir_path) for dir_path in request.excluded_dirs.split('\n') if dir_path.strip()]
+                            logger.info(f"Using custom excluded directories: {excluded_dirs}")
+                        if request.excluded_files:
+                            excluded_files = [unquote(file_pattern) for file_pattern in request.excluded_files.split('\n') if file_pattern.strip()]
+                            logger.info(f"Using custom excluded files: {excluded_files}")
+                        if request.included_dirs:
+                            included_dirs = [unquote(dir_path) for dir_path in request.included_dirs.split('\n') if dir_path.strip()]
+                            logger.info(f"Using custom included directories: {included_dirs}")
+                        if request.included_files:
+                            included_files = [unquote(file_pattern) for file_pattern in request.included_files.split('\n') if file_pattern.strip()]
+                            logger.info(f"Using custom included files: {included_files}")
+                        
+                        # Prepare retriever
+                        rag_instance.prepare_retriever(
+                            request.repo_url, 
+                            request.type, 
+                            request.token, 
+                            excluded_dirs, 
+                            excluded_files, 
+                            included_dirs, 
+                            included_files
+                        )
+                        logger.info(f"Retriever prepared for {request.repo_url}")
+                        
+                        # Get the query from the last message
+                        if request.messages:
+                            query = request.messages[-1].content
+                            
+                            # If filePath exists, modify the query for RAG to focus on the file
+                            rag_query = query
+                            if request.filePath:
+                                rag_query = f"Contexts related to {request.filePath}"
+                                logger.info(f"Modified RAG query to focus on file: {request.filePath}")
+                            
+                            # Perform RAG retrieval
+                            retrieved_documents = rag_instance(rag_query, language=request.language)
+                            
+                            if retrieved_documents and retrieved_documents[0].documents:
+                                documents = retrieved_documents[0].documents
+                                logger.info(f"Retrieved {len(documents)} documents")
+                                
+                                # Group documents by file path
+                                docs_by_file = {}
+                                for doc in documents:
+                                    file_path = doc.meta_data.get('file_path', 'unknown')
+                                    if file_path not in docs_by_file:
+                                        docs_by_file[file_path] = []
+                                    docs_by_file[file_path].append(doc)
+                                
+                                # Format context text with file path grouping
+                                context_parts = []
+                                for file_path, docs in docs_by_file.items():
+                                    header = f"## File Path: {file_path}\n\n"
+                                    content = "\n\n".join([doc.text for doc in docs])
+                                    context_parts.append(f"{header}{content}")
+                                
+                                context_text = "\n\n" + "-" * 10 + "\n\n".join(context_parts)
+                            else:
+                                logger.warning("No documents retrieved from RAG")
+                                
+                    except Exception as e:
+                        logger.error(f"Error in RAG setup: {str(e)}")
+                        context_text = ""
                 
-                # Prepare retriever
-                rag_instance.prepare_retriever(
-                    request.repo_url, 
-                    request.type, 
-                    request.token, 
-                    excluded_dirs, 
-                    excluded_files, 
-                    included_dirs, 
-                    included_files
-                )
-                logger.info(f"Retriever prepared for {request.repo_url}")
+                # Validate request
+                if not request.messages or len(request.messages) == 0:
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "message": "No messages provided"
+                    })
+                    await websocket.close()
+                    return
                 
-                # Get the query from the last message
-                if request.messages:
-                    query = request.messages[-1].content
-                    
-                    # If filePath exists, modify the query for RAG to focus on the file
-                    rag_query = query
-                    if request.filePath:
-                        rag_query = f"Contexts related to {request.filePath}"
-                        logger.info(f"Modified RAG query to focus on file: {request.filePath}")
-                    
-                    # Perform RAG retrieval
-                    retrieved_documents = rag_instance(rag_query, language=request.language)
-                    
-                    if retrieved_documents and retrieved_documents[0].documents:
-                        documents = retrieved_documents[0].documents
-                        logger.info(f"Retrieved {len(documents)} documents")
-                        
-                        # Group documents by file path
-                        docs_by_file = {}
-                        for doc in documents:
-                            file_path = doc.meta_data.get('file_path', 'unknown')
-                            if file_path not in docs_by_file:
-                                docs_by_file[file_path] = []
-                            docs_by_file[file_path].append(doc)
-                        
-                        # Format context text with file path grouping
-                        context_parts = []
-                        for file_path, docs in docs_by_file.items():
-                            header = f"## File Path: {file_path}\n\n"
-                            content = "\n\n".join([doc.text for doc in docs])
-                            context_parts.append(f"{header}{content}")
-                        
-                        context_text = "\n\n" + "-" * 10 + "\n\n".join(context_parts)
-                    else:
-                        logger.warning("No documents retrieved from RAG")
-                        
-            except Exception as e:
-                logger.error(f"Error in RAG setup: {str(e)}")
-                context_text = ""
-        
-        # Validate request
-        if not request.messages or len(request.messages) == 0:
-            await manager.send_json(websocket, {
-                "type": "error",
-                "message": "No messages provided"
-            })
-            await websocket.close()
-            return
-        
-        last_message = request.messages[-1]
-        if last_message.role != "user":
-            await manager.send_json(websocket, {
-                "type": "error",
-                "message": "Last message must be from the user"
-            })
-            await websocket.close()
-            return
-        
-        # Get repository information
-        repo_name = request.repo_url.split("/")[-1] if "/" in request.repo_url else request.repo_url
-        
-        # Get language information
-        language_code = request.language
-        supported_langs = configs.get("lang", {}).get("supported_languages", {"en": "English"})
-        language_name = supported_langs.get(language_code, "English")
+                last_message = request.messages[-1]
+                if last_message.role != "user":
+                    await manager.send_json(websocket, {
+                        "type": "error",
+                        "message": "Last message must be from the user"
+                    })
+                    await websocket.close()
+                    return
+                
+                # Get repository information
+                repo_name = request.repo_url.split("/")[-1] if "/" in request.repo_url else request.repo_url
+                
+                # Get language information
+                language_code = request.language
+                supported_langs = configs.get("lang", {}).get("supported_languages", {"en": "English"})
+                language_name = supported_langs.get(language_code, "English")
         
         # Create system prompt
         system_prompt = f"""<role>

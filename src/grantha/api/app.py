@@ -212,3 +212,7 @@ def create_app() -> FastAPI:
 
     logger.info("Grantha API application created successfully")
     return app
+
+
+# Create the app instance for uvicorn
+app = create_app()

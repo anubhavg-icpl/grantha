@@ -576,7 +576,7 @@
               disabled={isStreaming}
               class="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all min-h-[52px] max-h-[200px] disabled:opacity-50"
               rows="1"
-            />
+            ></textarea>
             <div class="absolute right-2 bottom-2">
               {#if isStreaming}
                 <button
@@ -622,6 +622,7 @@
       aria-labelledby="settings-modal-title"
       tabindex="-1"
     >
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <div 
         class="bg-card rounded-xl shadow-2xl border border-border p-6 max-w-md w-full" 
         onclick={(e) => e.stopPropagation()}

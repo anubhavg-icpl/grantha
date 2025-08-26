@@ -229,17 +229,17 @@
 							</Button>
 						</div>
 						<div class="text-sm space-y-2">
-							<p><strong>Title:</strong> {generationResult.wiki_structure.title}</p>
-							<p><strong>Description:</strong> {generationResult.wiki_structure.description}</p>
-							<p><strong>Pages:</strong> {generationResult.wiki_structure.pages?.length || 0}</p>
-							<p><strong>Provider:</strong> {generationResult.provider} • <strong>Model:</strong> {generationResult.model}</p>
+							<p><strong>Title:</strong> {generationResult?.wiki_structure?.title}</p>
+							<p><strong>Description:</strong> {generationResult?.wiki_structure?.description}</p>
+							<p><strong>Pages:</strong> {generationResult?.wiki_structure?.pages?.length || 0}</p>
+							<p><strong>Provider:</strong> {generationResult?.provider} • <strong>Model:</strong> {generationResult?.model}</p>
 						</div>
 						<div class="mt-3">
 							<Button 
 								variant="outline" 
 								size="sm" 
 								class="w-full"
-								onclick={() => generationResult.wiki_structure && openPreview(generationResult.wiki_structure)}
+								onclick={() => generationResult?.wiki_structure && openPreview(generationResult.wiki_structure)}
 							>
 								<Eye class="mr-2 h-4 w-4" />
 								Preview Wiki
@@ -506,11 +506,11 @@
 						{previewWiki?.pages?.length || 0} pages • Generated {previewWiki?.generated_at ? new Date(previewWiki.generated_at).toLocaleDateString() : 'recently'}
 					</div>
 					<div class="flex items-center gap-2">
-						{#if previewWiki.repo_url}
+						{#if previewWiki?.repo_url}
 							<Button 
 								variant="outline"
 								size="sm"
-								onclick={() => window.open(previewWiki.repo_url, '_blank')}
+								onclick={() => previewWiki?.repo_url && window.open(previewWiki.repo_url, '_blank')}
 							>
 								<ExternalLink class="mr-2 h-4 w-4" />
 								View Repository
