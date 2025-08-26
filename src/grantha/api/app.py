@@ -7,8 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from ..core.config import get_config
 from ..core.logging_config import setup_logging
 from .routes import auth_router, models_router, wiki_router, chat_router, research_router, simple_router, projects_router
+from ..models.api_models import HealthResponse, MetricsResponse
 from .websocket_handler import handle_websocket_chat
 from .middleware import RateLimitingMiddleware, LoggingMiddleware, CacheMiddleware
+from .middleware.auth import AuthenticationMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,14 @@ def create_app() -> FastAPI:
         default_window=60
     )
     
-    # 2. Logging - track all requests
+    # 2. Authentication - validate JWT tokens for protected routes
+    app.add_middleware(
+        AuthenticationMiddleware,
+        enable_auth=config.wiki_auth_mode,  # Enable based on config
+        auth_required_by_default=True
+    )
+    
+    # 3. Logging - track all requests
     app.add_middleware(
         LoggingMiddleware,
         log_request_body=False,  # Set to True for debugging
@@ -45,14 +54,14 @@ def create_app() -> FastAPI:
         max_body_size=1024
     )
     
-    # 3. Caching - optimize repeated requests
+    # 4. Caching - optimize repeated requests
     app.add_middleware(
         CacheMiddleware,
         max_size=1000,
         default_ttl=300
     )
     
-    # 4. CORS - last middleware before routing
+    # 5. CORS - last middleware before routing
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors_origins,  # Use configured origins
@@ -85,12 +94,12 @@ def create_app() -> FastAPI:
             "description": "AI-powered knowledge management and documentation platform"
         }
 
-    @app.get("/health")
+    @app.get("/health", response_model=HealthResponse)
     async def health():
         """Health check endpoint."""
-        return {"status": "healthy"}
+        return HealthResponse(status="healthy")
     
-    @app.get("/metrics")
+    @app.get("/metrics", response_model=MetricsResponse)
     async def get_metrics():
         """Get performance metrics."""
         # Get cache middleware instance from the app state or middleware stack
@@ -100,27 +109,32 @@ def create_app() -> FastAPI:
         # This would be better implemented with a global cache manager in production
         cache_enabled = True
         
-        metrics = {
-            "status": "operational",
-            "cache": {
-                "enabled": cache_enabled,
-                "stats": {
-                    "note": "Cache stats available in logs",
-                    "headers": "Check X-Cache headers in responses"
-                }
-            },
-            "middleware": {
-                "rate_limiting": "enabled",
-                "logging": "enabled", 
-                "caching": "enabled",
-                "cors": "enabled"
-            },
-            "performance": {
-                "avg_response_time": "< 10ms",
-                "cache_hit_rate": "Available in X-Cache headers"
+        cache_info = {
+            "enabled": cache_enabled,
+            "stats": {
+                "note": "Cache stats available in logs",
+                "headers": "Check X-Cache headers in responses"
             }
         }
-        return metrics
+        
+        middleware_info = {
+            "rate_limiting": "enabled",
+            "logging": "enabled", 
+            "caching": "enabled",
+            "cors": "enabled"
+        }
+        
+        performance_info = {
+            "avg_response_time": "< 10ms",
+            "cache_hit_rate": "Available in X-Cache headers"
+        }
+        
+        return MetricsResponse(
+            status="operational",
+            cache=cache_info,
+            middleware=middleware_info,
+            performance=performance_info
+        )
     
     @app.post("/admin/cache/clear")
     async def clear_cache(pattern: str = None):

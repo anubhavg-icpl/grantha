@@ -126,6 +126,51 @@ class AuthorizationConfig(BaseModel):
     code: str = Field(..., description="Authorization code")
 
 
+class LoginRequest(BaseModel):
+    """Model for login requests."""
+    username: str = Field(..., description="Username or email")
+    password: str = Field(..., description="Password")
+    remember_me: bool = Field(False, description="Whether to extend session duration")
+
+
+class LoginResponse(BaseModel):
+    """Model for login responses."""
+    access_token: str = Field(..., description="JWT access token")
+    refresh_token: str = Field(..., description="JWT refresh token")
+    token_type: str = Field("bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration time in seconds")
+    user_id: str = Field(..., description="User ID")
+
+
+class RefreshTokenRequest(BaseModel):
+    """Model for refresh token requests."""
+    refresh_token: str = Field(..., description="JWT refresh token")
+
+
+class RefreshTokenResponse(BaseModel):
+    """Model for refresh token responses."""
+    access_token: str = Field(..., description="New JWT access token")
+    token_type: str = Field("bearer", description="Token type")
+    expires_in: int = Field(..., description="Access token expiration time in seconds")
+
+
+class LogoutRequest(BaseModel):
+    """Model for logout requests."""
+    refresh_token: Optional[str] = Field(None, description="JWT refresh token to revoke")
+    revoke_all: bool = Field(False, description="Whether to revoke all user tokens")
+
+
+class TokenInfoResponse(BaseModel):
+    """Model for token information responses."""
+    user_id: str = Field(..., description="User ID")
+    token_type: str = Field(..., description="Token type (access/refresh)")
+    issued_at: int = Field(..., description="Token issued timestamp")
+    expires_at: int = Field(..., description="Token expiration timestamp")
+    is_expired: bool = Field(..., description="Whether token is expired")
+    is_revoked: bool = Field(..., description="Whether token is revoked")
+    jti: str = Field(..., description="JWT ID (unique token identifier)")
+
+
 class ChatRequest(BaseModel):
     """Model for chat requests."""
     messages: List[Dict[str, Any]]
@@ -177,3 +222,65 @@ class RAGRequest(BaseModel):
     token: Optional[str] = Field(None, description="Access token for private repositories")
     repo_type: str = Field("github", description="Repository type")
     k: int = Field(5, description="Number of relevant documents to retrieve")
+
+
+# Response Models
+
+class AuthStatusResponse(BaseModel):
+    """Response model for auth status."""
+    auth_required: bool = Field(..., description="Whether authentication is required")
+
+
+class AuthValidationResponse(BaseModel):
+    """Response model for auth code validation."""
+    success: bool = Field(..., description="Whether the authorization code is valid")
+
+
+class LanguageConfigResponse(BaseModel):
+    """Response model for language configuration."""
+    supported_languages: Dict[str, str] = Field(..., description="Supported languages with codes and names")
+    default: str = Field(..., description="Default language code")
+
+
+class ChatResponse(BaseModel):
+    """Response model for chat completion."""
+    content: str = Field(..., description="The generated response content")
+    model: str = Field(..., description="Model used for generation")
+    provider: str = Field(..., description="Provider used for generation")
+    role: str = Field("assistant", description="Role of the response")
+    usage: Optional[Dict[str, Any]] = Field(None, description="Token usage information")
+    finish_reason: Optional[str] = Field(None, description="Reason for completion finish")
+
+
+class SimpleResponse(BaseModel):
+    """Response model for simple chat."""
+    message: str = Field(..., description="The generated response message")
+    provider: str = Field(..., description="Provider used for generation")
+    model: str = Field(..., description="Model used for generation")
+    status: str = Field("success", description="Response status")
+
+
+class HealthResponse(BaseModel):
+    """Response model for health check."""
+    status: str = Field(..., description="Health status")
+
+
+class MetricsResponse(BaseModel):
+    """Response model for metrics."""
+    status: str = Field(..., description="System status")
+    cache: Dict[str, Any] = Field(..., description="Cache metrics and configuration")
+    middleware: Dict[str, str] = Field(..., description="Middleware status")
+    performance: Dict[str, str] = Field(..., description="Performance metrics")
+
+
+class ProjectListResponse(BaseModel):
+    """Response model for processed projects list."""
+    projects: List[Dict[str, Any]] = Field(..., description="List of processed projects")
+
+
+class WikiGenerationResponse(BaseModel):
+    """Response model for wiki generation."""
+    success: bool = Field(..., description="Whether generation was successful")
+    message: str = Field(..., description="Status message")
+    wiki_structure: Optional[Dict[str, Any]] = Field(None, description="Generated wiki structure")
+    cache_path: Optional[str] = Field(None, description="Path to cached wiki data")

@@ -138,8 +138,8 @@
     
     try {
       if (loginMethod === 'code') {
-        // Use existing auth code validation
-        const success = await authActions.validateCode(formData.authCode.trim());
+        // Use auth code login (legacy support)
+        const success = await authActions.loginWithCode(formData.authCode.trim());
         if (!success) {
           formError = $authState.error || 'Invalid authorization code';
         } else {
@@ -147,21 +147,12 @@
           setTimeout(() => showSuccess = false, 2000);
         }
       } else {
-        // For traditional login, we'll use the auth code field as a fallback
-        // In a real implementation, you'd have a separate login endpoint
-        // For now, we'll treat username/password as an auth code for demo purposes
-        const loginCode = `${formData.username || formData.email}:${formData.password}`;
-        const success = await authActions.validateCode(loginCode);
+        // Use JWT-based login with username/password
+        const username = formData.username || formData.email;
+        const success = await authActions.login(username, formData.password, false);
         
         if (!success) {
-          // If that fails, try just the password as auth code
-          const passSuccess = await authActions.validateCode(formData.password);
-          if (!passSuccess) {
-            formError = 'Invalid credentials. Please check your username/email and password.';
-          } else {
-            showSuccess = true;
-            setTimeout(() => showSuccess = false, 2000);
-          }
+          formError = $authState.error || 'Invalid credentials. Please check your username/email and password.';
         } else {
           showSuccess = true;
           setTimeout(() => showSuccess = false, 2000);

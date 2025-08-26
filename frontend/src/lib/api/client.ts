@@ -28,10 +28,36 @@ class APIClient {
     // In production, this can be overridden with actual API URL
     this.baseURL = baseURL || "";
 
-    // Try to get token from localStorage
+    // Try to get token from localStorage (JWT token storage)
     if (typeof localStorage !== "undefined") {
-      this.token = localStorage.getItem("grantha_auth_token");
+      const storedTokens = localStorage.getItem("grantha-tokens");
+      if (storedTokens) {
+        try {
+          const tokenData = JSON.parse(storedTokens);
+          this.token = tokenData.access_token;
+        } catch (error) {
+          console.error("Failed to parse stored tokens:", error);
+          // Fallback to legacy token storage
+          this.token = localStorage.getItem("grantha_auth_token");
+        }
+      } else {
+        // Fallback to legacy token storage
+        this.token = localStorage.getItem("grantha_auth_token");
+      }
     }
+  }
+
+  // Token management methods
+  setToken(token: string): void {
+    this.token = token;
+  }
+
+  clearToken(): void {
+    this.token = null;
+  }
+
+  getToken(): string | null {
+    return this.token;
   }
 
   private getHeaders(): HeadersInit {

@@ -14,6 +14,12 @@ import google.generativeai as genai
 
 from ..models.api_models import (
     AuthorizationConfig,
+    LoginRequest,
+    LoginResponse,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+    LogoutRequest,
+    TokenInfoResponse,
     ModelConfig,
     WikiGenerationRequest,
     DeepResearchRequest,
@@ -24,9 +30,17 @@ from ..models.api_models import (
     RAGRequest,
     WikiCacheRequest,
     WikiExportRequest,
-    WikiPage
+    WikiPage,
+    AuthStatusResponse,
+    AuthValidationResponse,
+    LanguageConfigResponse,
+    SimpleResponse,
+    HealthResponse,
+    MetricsResponse,
+    WikiGenerationResponse
 )
 from ..core.config import get_config, configs
+from ..utils.jwt_service import jwt_service
 
 logger = logging.getLogger(__name__)
 
@@ -97,25 +111,203 @@ projects_router = APIRouter()
 
 
 # Authentication routes
-@auth_router.get("/status")
+@auth_router.get("/status", response_model=AuthStatusResponse)
 async def get_auth_status():
     """Check if authentication is required for the wiki."""
     config = get_config()
-    return {"auth_required": config.wiki_auth_mode}
+    return AuthStatusResponse(auth_required=config.wiki_auth_mode)
 
 
-@auth_router.post("/validate")
+@auth_router.post("/validate", response_model=AuthValidationResponse)
 async def validate_auth_code(request: AuthorizationConfig):
     """Check authorization code."""
     config = get_config()
-    return {"success": config.wiki_auth_code == request.code}
+    return AuthValidationResponse(success=config.wiki_auth_code == request.code)
 
 
 # Language configuration route
-@auth_router.get("/lang/config")
+@auth_router.get("/lang/config", response_model=LanguageConfigResponse)
 async def get_lang_config():
     """Get language configuration."""
-    return configs.get("lang", {})
+    lang_config = configs.get("lang", {})
+    return LanguageConfigResponse(
+        supported_languages=lang_config.get('supported_languages', {}),
+        default=lang_config.get('default', 'en')
+    )
+
+
+# JWT-based authentication endpoints
+@auth_router.post("/login", response_model=LoginResponse)
+async def login(request: LoginRequest):
+    """Authenticate user and return JWT tokens."""
+    try:
+        config = get_config()
+        
+        # For now, use simple username/password check
+        # In production, implement proper user management with password hashing
+        if config.wiki_auth_mode:
+            # Simple validation using auth code as password
+            if request.password == config.wiki_auth_code:
+                user_id = request.username or "default_user"
+                
+                # Generate JWT tokens
+                access_token, refresh_token = jwt_service.generate_tokens(
+                    user_id=user_id,
+                    additional_claims={
+                        "username": request.username,
+                        "auth_method": "basic"
+                    }
+                )
+                
+                return LoginResponse(
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                    expires_in=30 * 60,  # 30 minutes
+                    user_id=user_id
+                )
+            else:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid credentials"
+                )
+        else:
+            # If auth not required, create session for any user
+            user_id = request.username or "anonymous_user"
+            access_token, refresh_token = jwt_service.generate_tokens(
+                user_id=user_id,
+                additional_claims={
+                    "username": request.username,
+                    "auth_method": "anonymous"
+                }
+            )
+            
+            return LoginResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expires_in=30 * 60,
+                user_id=user_id
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in login: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+
+@auth_router.post("/refresh", response_model=RefreshTokenResponse)
+async def refresh_token(request: RefreshTokenRequest):
+    """Refresh access token using refresh token."""
+    try:
+        # Validate refresh token and get new access token
+        new_access_token = jwt_service.refresh_access_token(request.refresh_token)
+        
+        if not new_access_token:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or expired refresh token"
+            )
+        
+        return RefreshTokenResponse(
+            access_token=new_access_token,
+            expires_in=30 * 60  # 30 minutes
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in token refresh: {str(e)}")
+        raise HTTPException(status_code=500, detail="Token refresh failed")
+
+
+@auth_router.post("/logout")
+async def logout(request: Request, logout_request: Optional[LogoutRequest] = None):
+    """Logout user and revoke tokens."""
+    try:
+        # Extract token from Authorization header
+        auth_header = request.headers.get("authorization")
+        if auth_header:
+            try:
+                scheme, token = auth_header.split(" ", 1)
+                if scheme.lower() == "bearer":
+                    jwt_service.revoke_token(token)
+            except ValueError:
+                pass  # Invalid header format, ignore
+        
+        # Revoke refresh token if provided
+        if logout_request and logout_request.refresh_token:
+            jwt_service.revoke_token(logout_request.refresh_token)
+        
+        # Revoke all tokens for user if requested
+        if logout_request and logout_request.revoke_all:
+            # Get user ID from current token
+            if auth_header:
+                try:
+                    _, token = auth_header.split(" ", 1)
+                    token_info = jwt_service.get_token_info(token)
+                    if token_info and token_info.get('user_id'):
+                        jwt_service.revoke_user_tokens(token_info['user_id'])
+                except ValueError:
+                    pass
+        
+        # Clean up expired tokens
+        jwt_service.cleanup_expired_tokens()
+        
+        return {"message": "Logged out successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error in logout: {str(e)}")
+        raise HTTPException(status_code=500, detail="Logout failed")
+
+
+@auth_router.get("/token/info", response_model=TokenInfoResponse)
+async def get_token_info(request: Request):
+    """Get information about the current token."""
+    try:
+        # Extract token from Authorization header
+        auth_header = request.headers.get("authorization")
+        if not auth_header:
+            raise HTTPException(
+                status_code=401,
+                detail="Authorization header required"
+            )
+        
+        try:
+            scheme, token = auth_header.split(" ", 1)
+            if scheme.lower() != "bearer":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Bearer token required"
+                )
+        except ValueError:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authorization header format"
+            )
+        
+        # Get token information
+        token_info = jwt_service.get_token_info(token)
+        if not token_info:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
+        
+        return TokenInfoResponse(
+            user_id=token_info['user_id'],
+            token_type=token_info['type'],
+            issued_at=token_info['issued_at'],
+            expires_at=token_info['expires_at'],
+            is_expired=token_info['is_expired'],
+            is_revoked=token_info['is_revoked'],
+            jti=token_info['jti']
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting token info: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get token info")
 
 
 # Models routes
@@ -743,7 +935,7 @@ async def deep_research(request: DeepResearchRequest):
 
 
 # Simple routes
-@simple_router.post("/chat")
+@simple_router.post("/chat", response_model=SimpleResponse)
 async def simple_chat(request: SimpleRequest):
     """Handle simple chat requests."""
     try:
