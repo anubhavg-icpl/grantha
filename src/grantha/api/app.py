@@ -1,18 +1,62 @@
 """FastAPI application factory for the Grantha platform."""
 
 import logging
+import asyncio
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..core.config import get_config
 from ..core.logging_config import setup_logging
+from ..database import init_database, close_database, check_database_health
+from ..database.init_data import initialize_default_data
 from .routes import auth_router, models_router, wiki_router, chat_router, research_router, simple_router, projects_router
+from .auth_routes import enhanced_auth_router
 from ..models.api_models import HealthResponse, MetricsResponse
 from .websocket_handler import handle_websocket_chat
 from .middleware import RateLimitingMiddleware, LoggingMiddleware, CacheMiddleware
 from .middleware.auth import AuthenticationMiddleware
 
 logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan context manager."""
+    # Startup
+    try:
+        logger.info("Initializing Grantha application...")
+        
+        # Initialize database
+        await init_database()
+        logger.info("Database initialized successfully")
+        
+        # Check database health
+        db_healthy = await check_database_health()
+        if not db_healthy:
+            logger.warning("Database health check failed, but continuing...")
+        else:
+            logger.info("Database health check passed")
+        
+        # Initialize default data (admin user, etc.)
+        await initialize_default_data()
+        
+        logger.info("Grantha application initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize application: {e}")
+        # Don't raise exception to allow app to start in degraded mode
+    
+    yield
+    
+    # Shutdown
+    try:
+        logger.info("Shutting down Grantha application...")
+        await close_database()
+        logger.info("Database connections closed")
+        logger.info("Grantha application shutdown complete")
+    except Exception as e:
+        logger.error(f"Error during application shutdown: {e}")
 
 
 def create_app() -> FastAPI:
@@ -24,11 +68,12 @@ def create_app() -> FastAPI:
     # Get configuration
     config = get_config()
     
-    # Initialize FastAPI app
+    # Initialize FastAPI app with lifespan
     app = FastAPI(
         title="ग्रंथ (Grantha) API",
         description="Knowledge management and documentation API powered by AI",
-        version="1.0.0"
+        version="1.0.0",
+        lifespan=lifespan
     )
 
     # Add performance middleware (order matters!)
@@ -71,6 +116,9 @@ def create_app() -> FastAPI:
     )
 
     # Include routers
+    # Enhanced authentication with database integration
+    app.include_router(enhanced_auth_router, prefix="/auth/v2", tags=["enhanced-authentication"])
+    # Legacy authentication for backward compatibility
     app.include_router(auth_router, prefix="/auth", tags=["authentication"])
     app.include_router(models_router, prefix="/models", tags=["models"])
     app.include_router(wiki_router, prefix="/wiki", tags=["wiki"])
@@ -97,7 +145,14 @@ def create_app() -> FastAPI:
     @app.get("/health", response_model=HealthResponse)
     async def health():
         """Health check endpoint."""
-        return HealthResponse(status="healthy")
+        # Check database health
+        db_healthy = await check_database_health()
+        status = "healthy" if db_healthy else "degraded"
+        
+        return HealthResponse(
+            status=status,
+            database={"status": "healthy" if db_healthy else "unhealthy"}
+        )
     
     @app.get("/metrics", response_model=MetricsResponse)
     async def get_metrics():
