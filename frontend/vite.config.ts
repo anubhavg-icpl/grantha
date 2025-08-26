@@ -34,10 +34,41 @@ export default defineConfig(({ mode }) => {
           ws: true,
           rewrite: (path: string) => path.replace(/^\/api/, "/api"),
         },
+        "/auth": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
+        },
         "/ws": {
           target: serverBaseUrl.replace("http", "ws"),
           ws: true,
           changeOrigin: true,
+        },
+        "/wiki": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
+        },
+        "/chat": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
+          ws: true,
+        },
+        "/processed_projects": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
+        },
+        "/model": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
+        },
+        "/openapi.json": {
+          target: serverBaseUrl,
+          changeOrigin: true,
+          secure: false,
         },
       },
       host:

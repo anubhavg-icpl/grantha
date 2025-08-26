@@ -66,7 +66,7 @@ export class EnhancedAPIClient {
    * Generate comprehensive wiki documentation
    */
   async generateWiki(params: WikiGenerationExtended) {
-    const response = await apiClient.request('/wiki/generate', {
+    const response = await apiClient.request<any>('/wiki/generate', {
       method: 'POST',
       body: JSON.stringify({
         repo_url: params.repo_url,
@@ -91,7 +91,7 @@ export class EnhancedAPIClient {
   async deepResearch(query: UnifiedResearchQuery) {
     if (query.type === 'deep' && query.k) {
       // Use RAG for deep research
-      return apiClient.request('/rag/query', {
+      return apiClient.request<any>('/rag/query', {
         method: 'POST',
         body: JSON.stringify({
           query: query.query,
@@ -105,7 +105,7 @@ export class EnhancedAPIClient {
       });
     } else {
       // Use standard research endpoint
-      return apiClient.request('/research/deep', {
+      return apiClient.request<any>('/research/deep', {
         method: 'POST',
         body: JSON.stringify({
           query: query.query,
@@ -181,7 +181,7 @@ export class EnhancedAPIClient {
    * Export wiki in various formats
    */
   async exportWiki(repoUrl: string, format: 'markdown' | 'json' | 'pdf' = 'markdown') {
-    const response = await apiClient.request(`/export/wiki?repo_url=${encodeURIComponent(repoUrl)}&format=${format}`, {
+    const response = await apiClient.request<any>(`/export/wiki?repo_url=${encodeURIComponent(repoUrl)}&format=${format}`, {
       method: 'GET'
     });
     
@@ -199,7 +199,7 @@ export class EnhancedAPIClient {
    * Get repository structure for local repos
    */
   async getLocalRepoStructure(path: string) {
-    return apiClient.request('/local_repo/structure', {
+    return apiClient.request<any>('/local_repo/structure', {
       method: 'POST',
       body: JSON.stringify({ path })
     });
@@ -210,7 +210,7 @@ export class EnhancedAPIClient {
    */
   async validateAuth(code: string): Promise<boolean> {
     try {
-      const response = await apiClient.request('/auth/validate', {
+      const response = await apiClient.request<{success: boolean}>('/auth/validate', {
         method: 'POST',
         body: JSON.stringify({ code })
       });
@@ -224,7 +224,7 @@ export class EnhancedAPIClient {
    * Get language configuration
    */
   async getLanguageConfig() {
-    return apiClient.request('/lang/config');
+    return apiClient.request<any>('/lang/config');
   }
   
   /**

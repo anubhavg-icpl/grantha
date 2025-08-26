@@ -7,6 +7,8 @@
 	import { apiClient } from '$lib/api/client';
 	import type { WikiGenerationRequest, WikiStructureModel } from '$lib/types/api';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import { get } from 'svelte/store';
 
 	let repoUrl = $state('');
 	let searchQuery = $state('');
@@ -16,6 +18,32 @@
 	let recentWikis = $state<WikiStructureModel[]>([]);
 
 	onMount(() => {
+		// Check URL parameters
+		const pageStore = get(page);
+		const searchParams = pageStore.url.searchParams;
+		
+		// Handle URL parameters: owner, repo, type, language
+		const owner = searchParams.get('owner');
+		const repo = searchParams.get('repo');
+		const type = searchParams.get('type') || 'github';
+		const language = searchParams.get('language') || 'en';
+		
+		if (owner && repo) {
+			// Construct the repository URL from parameters
+			if (type === 'github') {
+				repoUrl = `https://github.com/${owner}/${repo}`;
+			} else if (type === 'gitlab') {
+				repoUrl = `https://gitlab.com/${owner}/${repo}`;
+			} else if (type === 'bitbucket') {
+				repoUrl = `https://bitbucket.org/${owner}/${repo}`;
+			}
+			
+			// Auto-generate wiki if URL is provided
+			if (repoUrl) {
+				handleGenerateWiki();
+			}
+		}
+		
 		// Load model config if not already loaded
 		if (!$modelsState.config) {
 			modelsActions.loadConfig();

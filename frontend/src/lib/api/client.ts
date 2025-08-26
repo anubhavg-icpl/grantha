@@ -17,14 +17,16 @@ import type {
   ProcessedProjectEntry,
 } from "../types/api.js";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = ""; // Use relative URLs to leverage Vite proxy
 
 class APIClient {
   private baseURL: string;
   private token: string | null = null;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.baseURL = baseURL;
+    // In development, use empty string for relative URLs
+    // In production, this can be overridden with actual API URL
+    this.baseURL = baseURL || "";
 
     // Try to get token from localStorage
     if (typeof localStorage !== "undefined") {
@@ -44,7 +46,7 @@ class APIClient {
     return headers;
   }
 
-  private async request<T>(
+  async request<T>(
     endpoint: string,
     options: RequestInit = {},
   ): Promise<T> {

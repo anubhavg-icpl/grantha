@@ -81,7 +81,7 @@
 				language: project.language
 			});
 			
-			const response = await fetch(`http://localhost:8000/api/wiki_cache?${params}`, {
+			const response = await fetch(`/api/wiki_cache?${params}`, {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' }
 			});
