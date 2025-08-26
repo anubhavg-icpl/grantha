@@ -1,0 +1,1380 @@
+openapi: 3.0.3
+info:
+  title: ग्रंथ (Grantha) API
+  version: 1.0.0
+  description: |
+    AI-powered knowledge management and documentation platform API.
+    
+    Grantha provides comprehensive AI capabilities for:
+    - Wiki documentation generation
+    - Real-time chat completions
+    - Deep research functionality
+    - Project management and caching
+    - Multi-model AI integration
+  
+  contact:
+    name: Grantha API Support
+    url: https://github.com/grantha-project
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.grantha.io
+    description: Production server (if deployed)
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+paths:
+  /:
+    get:
+      summary: API Root Information
+      description: Get basic information about the Grantha API
+      operationId: getApiInfo
+      tags:
+        - System
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "ग्रंथ (Grantha) API"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  description:
+                    type: string
+                    example: "AI-powered knowledge management and documentation platform"
+
+  /health:
+    get:
+      summary: Health Check
+      description: Check the health status of the API
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+
+  /metrics:
+    get:
+      summary: System Metrics
+      description: Get operational metrics and performance statistics
+      operationId: getMetrics
+      tags:
+        - System
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "operational"
+                  cache:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                      stats:
+                        type: object
+                  middleware:
+                    type: object
+                    properties:
+                      rate_limiting:
+                        type: string
+                        example: "enabled"
+                      logging:
+                        type: string
+                        example: "enabled"
+                      caching:
+                        type: string
+                        example: "enabled"
+                      cors:
+                        type: string
+                        example: "enabled"
+                  performance:
+                    type: object
+
+  /auth/status:
+    get:
+      summary: Authentication Status
+      description: Check if authentication is required
+      operationId: getAuthStatus
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Authentication status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  auth_required:
+                    type: boolean
+
+  /auth/validate:
+    post:
+      summary: Validate Authorization Code
+      description: Validate an authorization code
+      operationId: validateAuth
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizationConfig'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /auth/lang/config:
+    get:
+      summary: Language Configuration
+      description: Get supported languages and language settings
+      operationId: getLangConfig
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Language configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  supported_languages:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  default_language:
+                    type: string
+                    example: "en"
+
+  /models/config:
+    get:
+      summary: Model Configuration
+      description: Get available AI model providers and their models
+      operationId: getModelConfig
+      tags:
+        - Models
+      responses:
+        '200':
+          description: Model configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelConfig'
+        '500':
+          description: Failed to retrieve model configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wiki/generate:
+    post:
+      summary: Generate Wiki Documentation
+      description: Generate comprehensive wiki documentation for a repository using AI
+      operationId: generateWiki
+      tags:
+        - Wiki
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WikiGenerationRequest'
+            examples:
+              basic:
+                summary: Basic wiki generation
+                value:
+                  repo_url: "https://github.com/owner/repo"
+                  language: "en"
+                  provider: "google"
+                  repo_type: "github"
+              with_token:
+                summary: Private repository with token
+                value:
+                  repo_url: "https://github.com/owner/private-repo"
+                  language: "en"
+                  provider: "google"
+                  token: "ghp_xxxxxxxxxxxx"
+                  repo_type: "github"
+      responses:
+        '200':
+          description: Wiki generation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wiki_structure:
+                    $ref: '#/components/schemas/WikiStructureModel'
+                  status:
+                    type: string
+                    example: "success"
+                  provider:
+                    type: string
+                  model:
+                    type: string
+        '500':
+          description: Wiki generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wiki/cache:
+    get:
+      summary: Get Cached Wiki
+      description: Retrieve cached wiki data for a repository
+      operationId: getCachedWiki
+      tags:
+        - Wiki
+      parameters:
+        - name: owner
+          in: query
+          required: true
+          description: Repository owner
+          schema:
+            type: string
+        - name: repo
+          in: query
+          required: true
+          description: Repository name
+          schema:
+            type: string
+        - name: repo_type
+          in: query
+          description: Repository type
+          schema:
+            type: string
+            default: "github"
+        - name: language
+          in: query
+          description: Language
+          schema:
+            type: string
+            default: "en"
+      responses:
+        '200':
+          description: Cached wiki data or null if not found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/WikiCacheData'
+                  - type: "null"
+        '500':
+          description: Failed to read wiki cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Save Wiki Cache
+      description: Save wiki cache data to the file system
+      operationId: saveWikiCache
+      tags:
+        - Wiki
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WikiCacheRequest'
+      responses:
+        '200':
+          description: Wiki cache saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Wiki cache saved successfully"
+                  cache_path:
+                    type: string
+        '500':
+          description: Failed to save wiki cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete Wiki Cache
+      description: Delete a specific wiki cache from the file system
+      operationId: deleteWikiCache
+      tags:
+        - Wiki
+      parameters:
+        - name: owner
+          in: query
+          required: true
+          description: Repository owner
+          schema:
+            type: string
+        - name: repo
+          in: query
+          required: true
+          description: Repository name
+          schema:
+            type: string
+        - name: repo_type
+          in: query
+          description: Repository type
+          schema:
+            type: string
+            default: "github"
+        - name: language
+          in: query
+          description: Language
+          schema:
+            type: string
+            default: "en"
+      responses:
+        '200':
+          description: Wiki cache deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Wiki cache not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete wiki cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wiki/export:
+    post:
+      summary: Export Wiki
+      description: Export wiki pages in markdown or JSON format
+      operationId: exportWiki
+      tags:
+        - Wiki
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WikiExportRequest'
+      responses:
+        '200':
+          description: Wiki export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  format:
+                    type: string
+                    enum: [markdown, json]
+                  content:
+                    oneOf:
+                      - type: string
+                      - type: object
+                  repo_url:
+                    type: string
+                  exported_at:
+                    type: string
+                    format: date-time
+                  page_count:
+                    type: integer
+        '400':
+          description: Unsupported export format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Export failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /wiki/projects:
+    get:
+      summary: List Processed Projects
+      description: Get all processed projects found in the wiki cache
+      operationId: listProcessedProjects
+      tags:
+        - Wiki
+      responses:
+        '200':
+          description: List of processed projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessedProjectEntry'
+        '500':
+          description: Failed to list processed projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat/completion:
+    post:
+      summary: Chat Completion
+      description: Handle chat completion requests with AI models
+      operationId: chatCompletion
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              basic:
+                summary: Basic chat request
+                value:
+                  messages:
+                    - role: "user"
+                      content: "Hello, how are you?"
+                  model: "gemini-2.0-flash-exp"
+                  provider: "google"
+              with_options:
+                summary: Chat with options
+                value:
+                  messages:
+                    - role: "system"
+                      content: "You are a helpful assistant."
+                    - role: "user"
+                      content: "Explain quantum computing"
+                  model: "gemini-2.0-flash-exp"
+                  provider: "google"
+                  temperature: 0.7
+                  max_tokens: 1000
+      responses:
+        '200':
+          description: Chat completion response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '500':
+          description: Chat completion failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat/completions/stream:
+    post:
+      summary: Streaming Chat Completion
+      description: Handle streaming chat completion requests using Server-Sent Events
+      operationId: chatCompletionStream
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatStreamRequest'
+      responses:
+        '200':
+          description: Streaming chat response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events stream
+              examples:
+                stream_chunk:
+                  summary: Stream chunk
+                  value: |
+                    data: {"content": "Hello", "done": false, "model": "gemini-2.0-flash-exp", "provider": "google"}
+
+                    data: {"content": "", "done": true, "model": "gemini-2.0-flash-exp", "provider": "google"}
+        '500':
+          description: Streaming failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /research/deep:
+    post:
+      summary: Deep Research
+      description: Perform comprehensive AI-powered research on a topic
+      operationId: deepResearch
+      tags:
+        - Research
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeepResearchRequest'
+      responses:
+        '200':
+          description: Research results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  query:
+                    type: string
+                  results:
+                    type: string
+                  repo_url:
+                    type: string
+                  provider:
+                    type: string
+                  model:
+                    type: string
+                  language:
+                    type: string
+                  status:
+                    type: string
+                    example: "success"
+        '500':
+          description: Research failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /simple/chat:
+    post:
+      summary: Simple Chat
+      description: Handle simple chat requests with basic query processing
+      operationId: simpleChat
+      tags:
+        - Simple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleRequest'
+      responses:
+        '200':
+          description: Simple chat response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  provider:
+                    type: string
+                  model:
+                    type: string
+                  status:
+                    type: string
+                    enum: [success, fallback, no_api_key]
+                  error:
+                    type: string
+                    description: Present if status is fallback
+        '500':
+          description: Simple chat failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /simple/rag:
+    post:
+      summary: RAG (Retrieval-Augmented Generation)
+      description: Handle RAG requests with document retrieval and generation
+      operationId: simpleRAG
+      tags:
+        - Simple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RAGRequest'
+      responses:
+        '200':
+          description: RAG response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  sources:
+                    type: array
+                    items:
+                      type: string
+                  provider:
+                    type: string
+                  model:
+                    type: string
+                  status:
+                    type: string
+                    example: "success"
+        '500':
+          description: RAG request failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/processed_projects:
+    get:
+      summary: Get Processed Projects
+      description: Get list of all processed projects from cache
+      operationId: getProcessedProjects
+      tags:
+        - Projects
+      responses:
+        '200':
+          description: List of processed projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProcessedProjectEntry'
+        '500':
+          description: Failed to fetch processed projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Save Processed Project
+      description: Save a processed project entry
+      operationId: saveProcessedProject
+      tags:
+        - Projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                owner:
+                  type: string
+                repo:
+                  type: string
+                repo_type:
+                  type: string
+                  default: "github"
+                language:
+                  type: string
+                  default: "en"
+                wiki_structure:
+                  $ref: '#/components/schemas/WikiStructureModel'
+                generated_pages:
+                  type: object
+                  additionalProperties:
+                    $ref: '#/components/schemas/WikiPage'
+                provider:
+                  type: string
+                  default: "google"
+                model:
+                  type: string
+      responses:
+        '200':
+          description: Project saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  message:
+                    type: string
+                    example: "Project saved successfully"
+        '500':
+          description: Failed to save processed project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/wiki_cache:
+    delete:
+      summary: Delete Project Wiki Cache
+      description: Delete a specific project's wiki cache
+      operationId: deleteProjectWikiCache
+      tags:
+        - Projects
+      parameters:
+        - name: owner
+          in: query
+          required: true
+          description: Repository owner
+          schema:
+            type: string
+        - name: repo
+          in: query
+          required: true
+          description: Repository name
+          schema:
+            type: string
+        - name: repo_type
+          in: query
+          required: true
+          description: Repository type
+          schema:
+            type: string
+        - name: language
+          in: query
+          required: true
+          description: Language
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Project cache deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Project cache deleted successfully"
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Failed to delete project cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /ws/chat:
+    get:
+      summary: WebSocket Chat Endpoint
+      description: WebSocket endpoint for real-time chat communication
+      operationId: websocketChat
+      tags:
+        - WebSocket
+      responses:
+        '101':
+          description: WebSocket connection established
+        '400':
+          description: Bad request
+        '426':
+          description: Upgrade required
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        type:
+          type: string
+          description: Error type
+
+    AuthorizationConfig:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Authorization code
+
+    Model:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Model identifier
+        name:
+          type: string
+          description: Display name for the model
+
+    Provider:
+      type: object
+      required:
+        - id
+        - name
+        - models
+      properties:
+        id:
+          type: string
+          description: Provider identifier
+        name:
+          type: string
+          description: Display name for the provider
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+          description: List of available models for this provider
+        supportsCustomModel:
+          type: boolean
+          default: false
+          description: Whether this provider supports custom models
+
+    ModelConfig:
+      type: object
+      required:
+        - providers
+        - defaultProvider
+      properties:
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+          description: List of available model providers
+        defaultProvider:
+          type: string
+          description: ID of the default provider
+
+    WikiPage:
+      type: object
+      required:
+        - id
+        - title
+        - content
+        - filePaths
+        - importance
+        - relatedPages
+      properties:
+        id:
+          type: string
+          description: Unique page identifier
+        title:
+          type: string
+          description: Page title
+        content:
+          type: string
+          description: Page content in markdown format
+        filePaths:
+          type: array
+          items:
+            type: string
+          description: Related file paths
+        importance:
+          type: string
+          enum: [high, medium, low]
+          description: Page importance level
+        relatedPages:
+          type: array
+          items:
+            type: string
+          description: Related page identifiers
+
+    WikiSection:
+      type: object
+      required:
+        - id
+        - title
+        - pages
+      properties:
+        id:
+          type: string
+          description: Section identifier
+        title:
+          type: string
+          description: Section title
+        pages:
+          type: array
+          items:
+            type: string
+          description: Page IDs in this section
+        subsections:
+          type: array
+          items:
+            type: string
+          description: Subsection IDs
+
+    WikiStructureModel:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - pages
+      properties:
+        id:
+          type: string
+          description: Wiki structure identifier
+        title:
+          type: string
+          description: Wiki title
+        description:
+          type: string
+          description: Wiki description
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/WikiPage'
+          description: All pages in the wiki
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/WikiSection'
+          description: Wiki sections
+        rootSections:
+          type: array
+          items:
+            type: string
+          description: Root section identifiers
+
+    RepoInfo:
+      type: object
+      required:
+        - owner
+        - repo
+        - type
+      properties:
+        owner:
+          type: string
+          description: Repository owner
+        repo:
+          type: string
+          description: Repository name
+        type:
+          type: string
+          description: Repository type (e.g., github, gitlab)
+        token:
+          type: string
+          description: Access token for private repositories
+        localPath:
+          type: string
+          description: Local file system path
+        repoUrl:
+          type: string
+          description: Repository URL
+
+    WikiCacheData:
+      type: object
+      required:
+        - wiki_structure
+        - generated_pages
+      properties:
+        wiki_structure:
+          $ref: '#/components/schemas/WikiStructureModel'
+        generated_pages:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/WikiPage'
+        repo_url:
+          type: string
+          description: Repository URL (legacy compatibility)
+        repo:
+          $ref: '#/components/schemas/RepoInfo'
+        provider:
+          type: string
+          description: AI model provider used
+        model:
+          type: string
+          description: Specific model used
+
+    ProcessedProjectEntry:
+      type: object
+      required:
+        - id
+        - owner
+        - repo
+        - name
+        - repo_type
+        - submittedAt
+        - language
+      properties:
+        id:
+          type: string
+          description: Project identifier (filename)
+        owner:
+          type: string
+          description: Repository owner
+        repo:
+          type: string
+          description: Repository name
+        name:
+          type: string
+          description: Full project name (owner/repo)
+        repo_type:
+          type: string
+          description: Repository type
+        submittedAt:
+          type: integer
+          description: Submission timestamp in milliseconds
+        language:
+          type: string
+          description: Project language
+
+    WikiGenerationRequest:
+      type: object
+      required:
+        - repo_url
+      properties:
+        repo_url:
+          type: string
+          description: URL of the repository
+          format: uri
+        language:
+          type: string
+          default: "en"
+          description: Language for wiki content
+        provider:
+          type: string
+          default: "google"
+          description: Model provider
+        model:
+          type: string
+          description: Specific model to use
+        token:
+          type: string
+          description: Access token for private repositories
+        repo_type:
+          type: string
+          default: "github"
+          description: Repository type
+
+    WikiCacheRequest:
+      type: object
+      required:
+        - repo
+        - language
+        - wiki_structure
+        - generated_pages
+        - provider
+        - model
+      properties:
+        repo:
+          $ref: '#/components/schemas/RepoInfo'
+        language:
+          type: string
+          description: Content language
+        wiki_structure:
+          $ref: '#/components/schemas/WikiStructureModel'
+        generated_pages:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/WikiPage'
+        provider:
+          type: string
+          description: AI model provider
+        model:
+          type: string
+          description: AI model used
+
+    WikiExportRequest:
+      type: object
+      required:
+        - repo_url
+        - pages
+        - format
+      properties:
+        repo_url:
+          type: string
+          description: URL of the repository
+          format: uri
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/WikiPage'
+          description: List of wiki pages to export
+        format:
+          type: string
+          enum: [markdown, json]
+          description: Export format
+
+    ChatRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [system, user, assistant]
+              content:
+                type: string
+          description: Conversation messages
+        model:
+          type: string
+          description: AI model to use
+        provider:
+          type: string
+          description: Model provider
+        stream:
+          type: boolean
+          default: false
+          description: Enable streaming response
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Response creativity (0-2)
+        max_tokens:
+          type: integer
+          minimum: 1
+          description: Maximum response length
+
+    ChatResponse:
+      type: object
+      required:
+        - content
+        - model
+        - provider
+        - role
+      properties:
+        content:
+          type: string
+          description: Response content
+        model:
+          type: string
+          description: Model used
+        provider:
+          type: string
+          description: Provider used
+        role:
+          type: string
+          default: "assistant"
+          description: Response role
+        usage:
+          type: object
+          description: Token usage information
+        finish_reason:
+          type: string
+          description: Why the response finished
+
+    ChatStreamRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [system, user, assistant]
+              content:
+                type: string
+          description: Conversation messages
+        model:
+          type: string
+          description: AI model to use
+        provider:
+          type: string
+          description: Model provider
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Response creativity (0-2)
+        max_tokens:
+          type: integer
+          minimum: 1
+          description: Maximum response length
+        stream:
+          type: boolean
+          default: true
+          description: Always true for streaming
+
+    DeepResearchRequest:
+      type: object
+      required:
+        - query
+        - repo_url
+      properties:
+        query:
+          type: string
+          description: Research question
+        repo_url:
+          type: string
+          description: Repository URL for context
+          format: uri
+        language:
+          type: string
+          default: "en"
+          description: Language for responses
+        provider:
+          type: string
+          default: "google"
+          description: Model provider
+        model:
+          type: string
+          description: Specific model to use
+        token:
+          type: string
+          description: Access token for private repositories
+        repo_type:
+          type: string
+          default: "github"
+          description: Repository type
+
+    SimpleRequest:
+      type: object
+      required:
+        - user_query
+      properties:
+        user_query:
+          type: string
+          description: User query
+        repo_url:
+          type: string
+          description: Repository URL for context
+          format: uri
+        provider:
+          type: string
+          default: "google"
+          description: Model provider
+        model:
+          type: string
+          description: Specific model to use
+        language:
+          type: string
+          default: "en"
+          description: Language for responses
+        token:
+          type: string
+          description: Access token for private repositories
+        repo_type:
+          type: string
+          default: "github"
+          description: Repository type
+
+    RAGRequest:
+      type: object
+      required:
+        - query
+        - repo_url
+      properties:
+        query:
+          type: string
+          description: Query string for retrieval and generation
+        repo_url:
+          type: string
+          description: Repository URL
+          format: uri
+        provider:
+          type: string
+          default: "google"
+          description: Model provider
+        model:
+          type: string
+          description: Specific model to use
+        language:
+          type: string
+          default: "en"
+          description: Language for responses
+        token:
+          type: string
+          description: Access token for private repositories
+        repo_type:
+          type: string
+          default: "github"
+          description: Repository type
+        k:
+          type: integer
+          default: 5
+          minimum: 1
+          maximum: 20
+          description: Number of relevant documents to retrieve
+
+tags:
+  - name: System
+    description: System health and information endpoints
+  - name: Authentication
+    description: Authentication and authorization endpoints
+  - name: Models
+    description: AI model configuration and management
+  - name: Wiki
+    description: Wiki generation and management
+  - name: Chat
+    description: Chat completion and conversation endpoints
+  - name: Research
+    description: Research and analysis capabilities
+  - name: Simple
+    description: Simple API endpoints for basic operations
+  - name: Projects
+    description: Project management and caching
+  - name: WebSocket
+    description: Real-time communication endpoints
+
+externalDocs:
+  description: Find more information about Grantha
+  url: https://github.com/grantha-project

@@ -109,6 +109,8 @@ export default defineConfig(({ mode }) => {
         "tailwind-merge",
         "tailwind-variants",
         "mode-watcher",
+        "marked",
+        "prismjs",
       ],
       exclude: [
         // Exclude SvelteKit and related packages
