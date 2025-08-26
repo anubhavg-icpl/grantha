@@ -712,7 +712,6 @@ function optimizedFunction() {
                 {selectedAgent.status === 'running' ? 'Running...' : 'Run Task'}
               </button>
             </div>
-            </fieldset>
           </div>
         {:else}
           <div class="bg-card border border-border rounded-lg p-8 text-center">
@@ -904,7 +903,6 @@ function optimizedFunction() {
                 </select>
               </div>
             </div>
-            </fieldset>
           </div>
           
           <!-- Capabilities -->
@@ -1095,7 +1093,6 @@ function optimizedFunction() {
                 </select>
               </div>
             </div>
-            </fieldset>
           </div>
           
           <!-- Capabilities -->
