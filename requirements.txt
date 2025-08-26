@@ -24,6 +24,15 @@ numpy>=1.24.0
 faiss-cpu>=1.7.4
 langid>=1.1.6
 
+# Database dependencies
+sqlalchemy>=2.0.25
+alembic>=1.13.0
+asyncpg>=0.29.0
+aiosqlite>=0.19.0
+bcrypt>=4.1.2
+passlib[bcrypt]>=1.7.4
+greenlet>=3.0.0
+
 # Performance and middleware
 slowapi>=0.1.9
 redis>=4.5.0
