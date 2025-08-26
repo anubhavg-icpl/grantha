@@ -492,6 +492,71 @@ DEFAULT_EXCLUDED_FILES: List[str] = [
 WIKI_AUTH_MODE = _config.wiki_auth_mode
 WIKI_AUTH_CODE = _config.wiki_auth_code
 
+# API Key constants for backward compatibility
+OPENAI_API_KEY = _config.openai_api_key
+GOOGLE_API_KEY = _config.google_api_key
+OPENROUTER_API_KEY = _config.openrouter_api_key
+AWS_ACCESS_KEY_ID = _config.aws_access_key_id
+AWS_SECRET_ACCESS_KEY = _config.aws_secret_access_key
+AWS_REGION = _config.aws_region
+AWS_ROLE_ARN = _config.aws_role_arn
+AZURE_OPENAI_API_KEY = _config.azure_openai_api_key
+AZURE_OPENAI_ENDPOINT = _config.azure_openai_endpoint
+AZURE_OPENAI_DEPLOYMENT = _config.azure_openai_deployment
+DASHSCOPE_API_KEY = _config.dashscope_api_key
+
+
+def get_model_config(provider: str, model: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Get model configuration for a specific provider and model.
+    
+    Args:
+        provider: The provider name (e.g., "google", "openai", "openrouter")
+        model: The model name (optional, will use default if not provided)
+    
+    Returns:
+        Dictionary containing model configuration including model_client
+    """
+    generator_config = configs.get("generator", {})
+    providers = generator_config.get("providers", {})
+    
+    if provider not in providers:
+        raise ValueError(f"Provider '{provider}' not found in configuration")
+    
+    provider_config = providers[provider]
+    
+    # Use provided model or default
+    if model is None:
+        model = provider_config.get("default_model")
+        if not model:
+            raise ValueError(f"No default model configured for provider '{provider}'")
+    
+    models = provider_config.get("models", {})
+    if model not in models:
+        # For providers that support custom models, return basic config
+        if provider_config.get("supportsCustomModel", False):
+            model_config = {"temperature": 0.7}  # Default values
+        else:
+            raise ValueError(f"Model '{model}' not found for provider '{provider}'")
+    else:
+        model_config = models[model].copy()
+    
+    # Add provider-level information
+    result = {
+        "provider": provider,
+        "model": model,
+        "model_kwargs": model_config,
+        "model_client": provider_config.get("model_client")
+    }
+    
+    # If no model_client, try to get it from client mapping
+    if not result["model_client"] and hasattr(_config_loader, 'client_classes'):
+        client_class_name = provider_config.get("client_class")
+        if client_class_name and client_class_name in _config_loader.client_classes:
+            result["model_client"] = _config_loader.client_classes[client_class_name]
+    
+    return result
+
 
 def reload_configs():
     """Reload all configurations."""

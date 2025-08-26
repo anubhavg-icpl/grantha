@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { Bot, Plus, Settings, Play, Pause, Trash2, Edit2, Save, X, Code, FileText, Search, Shield, Zap, Brain, CheckCircle, XCircle, AlertCircle, BookOpen, Terminal, Database, Globe, GitBranch } from 'lucide-svelte';
   import { apiClient } from '$lib/api/client.js';
-  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 
   interface AgentCapability {
     id: string;
@@ -471,7 +470,6 @@ function optimizedFunction() {
           <p class="text-muted-foreground mt-1">Create autonomous agents for wiki generation, documentation, and more</p>
         </div>
         <div class="flex items-center gap-4">
-          <ThemeToggle />
           <button
             onclick={() => { selectedTemplate = null; showCreateModal = true; }}
             class="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
@@ -495,7 +493,8 @@ function optimizedFunction() {
             class="group bg-card border border-border rounded-xl p-6 hover:shadow-lg hover:border-primary transition-all text-left"
           >
             <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-              <svelte:component this={template.icon} class="w-7 h-7 text-primary" />
+              {@const IconComponent = template.icon}
+              <IconComponent class="w-7 h-7 text-primary" />
             </div>
             <h3 class="font-semibold mb-2">{template.name}</h3>
             <p class="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
@@ -518,14 +517,16 @@ function optimizedFunction() {
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-start gap-3">
                     <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <svelte:component this={getAgentIcon(agent.type)} class="w-6 h-6 text-primary" />
+                      {@const IconComponent = getAgentIcon(agent.type)}
+                      <IconComponent class="w-6 h-6 text-primary" />
                     </div>
                     <div class="flex-1">
                       <h3 class="font-semibold text-lg">{agent.name}</h3>
                       <p class="text-sm text-muted-foreground">{agent.description}</p>
                       <div class="flex items-center gap-3 mt-2">
                         <div class="flex items-center gap-1">
-                          <svelte:component this={getStatusIcon(agent.status)} class="w-4 h-4 {getStatusColor(agent.status)}" />
+                          {@const StatusIcon = getStatusIcon(agent.status)}
+                          <StatusIcon class="w-4 h-4 {getStatusColor(agent.status)}" />
                           <span class="text-xs {getStatusColor(agent.status)} capitalize">{agent.status}</span>
                         </div>
                         {#if agent.lastRun}
@@ -577,7 +578,8 @@ function optimizedFunction() {
                   {#each agent.capabilities.slice(0, 4) as capId}
                     {#each capabilities.filter(c => c.id === capId) as capability}
                       <span class="flex items-center gap-1 px-2 py-1 text-xs bg-secondary/50 text-secondary-foreground rounded-full">
-                        <svelte:component this={capability.icon} class="w-3 h-3" />
+                        {@const CapIcon = capability.icon}
+                        <CapIcon class="w-3 h-3" />
                         {capability.name}
                       </span>
                     {/each}
@@ -633,7 +635,8 @@ function optimizedFunction() {
             <div class="mb-6">
               <div class="flex items-center gap-3 mb-3">
                 <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <svelte:component this={getAgentIcon(selectedAgent.type)} class="w-5 h-5 text-primary" />
+                  {@const AgentIcon = getAgentIcon(selectedAgent.type)}
+                  <AgentIcon class="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 class="font-semibold">{selectedAgent.name}</h3>

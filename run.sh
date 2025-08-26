@@ -7,16 +7,18 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Load environment variables
-if [ -f .env ]; then
-    # Properly handle .env file with spaces and special characters
-    set -a
-    source .env
-    set +a
-    echo -e "${GREEN}✓${NC} Loaded environment from .env"
-else
-    echo -e "${YELLOW}⚠${NC} No .env file found, using defaults"
-fi
+# Function to load environment variables (only when needed)
+load_env() {
+    if [ -f .env ]; then
+        # Properly handle .env file with spaces and special characters
+        set -a
+        source .env
+        set +a
+        echo -e "${GREEN}✓${NC} Loaded environment from .env"
+    else
+        echo -e "${YELLOW}⚠${NC} No .env file found, using defaults"
+    fi
+}
 
 # Check dependencies
 check_dependencies() {
@@ -50,6 +52,7 @@ check_dependencies() {
 
 # Start API server
 start_api() {
+    load_env
     echo -e "${BLUE}Starting API server on port 8000...${NC}"
     cd "$(dirname "$0")"
     python3 -m uvicorn src.grantha.api.app:create_app --factory --reload --host 0.0.0.0 --port 8000
@@ -57,6 +60,7 @@ start_api() {
 
 # Start frontend
 start_frontend() {
+    load_env
     echo -e "${BLUE}Starting frontend development server on port 3000...${NC}"
     cd "$(dirname "$0")/frontend"
     pnpm dev --host --port 3000
@@ -65,6 +69,7 @@ start_frontend() {
 # Start both API and frontend
 start_dev() {
     check_dependencies
+    load_env
     
     echo -e "${BLUE}Starting Grantha in development mode...${NC}"
     echo -e "${GREEN}API:${NC}      http://localhost:8000"
@@ -221,7 +226,7 @@ show_help() {
 }
 
 # Main command handler
-case "${1:-dev}" in
+case "${1}" in
     api)
         check_dependencies
         start_api
@@ -257,9 +262,13 @@ case "${1:-dev}" in
     help|--help|-h)
         show_help
         ;;
-    *)
-        echo -e "${RED}Unknown command: $1${NC}"
-        show_help
-        exit 1
+    ""|*)
+        if [ -z "$1" ]; then
+            start_dev
+        else
+            echo -e "${RED}Unknown command: $1${NC}"
+            show_help
+            exit 1
+        fi
         ;;
 esac

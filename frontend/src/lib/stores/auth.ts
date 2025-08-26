@@ -13,6 +13,7 @@ interface AuthState {
   authRequired: boolean;
   isLoading: boolean;
   error: string | null;
+  redirectTo?: string;
 }
 
 // Initialize auth state
@@ -21,6 +22,7 @@ const initialState: AuthState = {
   authRequired: false,
   isLoading: false,
   error: null,
+  redirectTo: undefined,
 };
 
 // Create writable stores
