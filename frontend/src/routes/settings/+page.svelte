@@ -11,13 +11,21 @@
 		Bell,
 		Shield,
 		Database,
-		Palette
+		Palette,
+		Lock,
+		LogOut,
+		UserCog,
+		KeyRound
 	} from 'lucide-svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Input from '$lib/components/ui/input.svelte';
 	import Select from '$lib/components/ui/select.svelte';
 	import Badge from '$lib/components/ui/badge.svelte';
 	import Card from '$lib/components/ui/card.svelte';
+	import UserProfile from '$lib/components/auth/UserProfile.svelte';
+	import ChangePasswordForm from '$lib/components/auth/ChangePasswordForm.svelte';
+	import SessionManager from '$lib/components/auth/SessionManager.svelte';
+	import { authState } from '$lib/stores/auth';
 
 	interface UserSettings {
 		theme: 'light' | 'dark' | 'system';
@@ -52,6 +60,8 @@
 	let originalSettings = $state<UserSettings>({ ...initialSettings });
 	let hasChanges = $derived(JSON.stringify(settings) !== JSON.stringify(originalSettings));
 	let isSaving = $state(false);
+	let activeTab = $state<'general' | 'profile' | 'security' | 'sessions'>('general');
+	let showChangePassword = $state(false);
 
 	const themeOptions = [
 		{ value: 'light', label: 'Light' },
@@ -130,6 +140,25 @@
 			originalSettings = { ...settings };
 		}
 	});
+
+	// Tab management functions
+	function switchTab(tab: 'general' | 'profile' | 'security' | 'sessions') {
+		activeTab = tab;
+		showChangePassword = false;
+	}
+
+	function handlePasswordChangeSuccess() {
+		showChangePassword = false;
+		// Password change success is handled by the component itself (user will be logged out)
+	}
+
+	function handlePasswordChangeError(event: CustomEvent) {
+		console.error('Password change failed:', event.detail.message);
+	}
+
+	function handlePasswordChangeCancel() {
+		showChangePassword = false;
+	}
 </script>
 
 <svelte:head>
@@ -145,10 +174,63 @@
 		</p>
 	</div>
 
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-		<!-- Settings Forms -->
-		<div class="lg:col-span-2 space-y-6">
-			<!-- Appearance Settings -->
+	<!-- Tab Navigation -->
+	<div class="border-b border-border">
+		<nav class="-mb-px flex space-x-8">
+			<button
+				class="py-2 px-1 border-b-2 font-medium text-sm transition-colors
+					{activeTab === 'general' 
+						? 'border-primary text-primary' 
+						: 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
+				onclick={() => switchTab('general')}
+			>
+				<Settings class="w-4 h-4 inline mr-2" />
+				General
+			</button>
+			
+			{#if $authState.isAuthenticated}
+				<button
+					class="py-2 px-1 border-b-2 font-medium text-sm transition-colors
+						{activeTab === 'profile' 
+							? 'border-primary text-primary' 
+							: 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
+					onclick={() => switchTab('profile')}
+				>
+					<User class="w-4 h-4 inline mr-2" />
+					Profile
+				</button>
+				
+				<button
+					class="py-2 px-1 border-b-2 font-medium text-sm transition-colors
+						{activeTab === 'security' 
+							? 'border-primary text-primary' 
+							: 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
+					onclick={() => switchTab('security')}
+				>
+					<Shield class="w-4 h-4 inline mr-2" />
+					Security
+				</button>
+				
+				<button
+					class="py-2 px-1 border-b-2 font-medium text-sm transition-colors
+						{activeTab === 'sessions' 
+							? 'border-primary text-primary' 
+							: 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'}"
+					onclick={() => switchTab('sessions')}
+				>
+					<Monitor class="w-4 h-4 inline mr-2" />
+					Sessions
+				</button>
+			{/if}
+		</nav>
+	</div>
+
+	<!-- Tab Content -->
+	{#if activeTab === 'general'}
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<!-- Settings Forms -->
+			<div class="lg:col-span-2 space-y-6">
+				<!-- Appearance Settings -->
 			<Card class="p-6">
 				<div class="flex items-center mb-4">
 					<Palette class="mr-2 h-5 w-5 text-primary" />
@@ -291,12 +373,12 @@
 						/>
 					</div>
 				</div>
-			</Card>
-		</div>
+				</Card>
+			</div>
 
-		<!-- Settings Summary & Actions -->
-		<div class="space-y-6">
-			<!-- Current Settings Summary -->
+			<!-- Settings Summary & Actions -->
+			<div class="space-y-6">
+				<!-- Current Settings Summary -->
 			<Card class="p-6">
 				<div class="flex items-center mb-4">
 					<User class="mr-2 h-5 w-5 text-primary" />
@@ -387,12 +469,136 @@
 						Reset to Defaults
 					</Button>
 				</div>
-			</Card>
+				</Card>
+			</div>
 		</div>
-	</div>
+	{:else if activeTab === 'profile' && $authState.isAuthenticated}
+		<div class="max-w-4xl">
+			<UserProfile />
+		</div>
+	{:else if activeTab === 'security' && $authState.isAuthenticated}
+		<div class="max-w-2xl mx-auto space-y-6">
+			{#if showChangePassword}
+				<!-- Change Password Form -->
+				<Card class="p-6">
+					<ChangePasswordForm
+						on:success={handlePasswordChangeSuccess}
+						on:error={handlePasswordChangeError}
+						on:cancel={handlePasswordChangeCancel}
+					/>
+				</Card>
+			{:else}
+				<!-- Security Overview -->
+				<Card class="p-6">
+					<div class="flex items-center mb-6">
+						<Shield class="mr-3 h-6 w-6 text-primary" />
+						<div>
+							<h2 class="text-xl font-semibold">Account Security</h2>
+							<p class="text-sm text-muted-foreground">Manage your account security settings</p>
+						</div>
+					</div>
+					
+					<div class="space-y-4">
+						<!-- Password Section -->
+						<div class="flex items-center justify-between p-4 border border-border rounded-lg">
+							<div class="flex items-center space-x-3">
+								<div class="flex-shrink-0">
+									<div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+										<Lock class="w-5 h-5 text-primary" />
+									</div>
+								</div>
+								<div>
+									<h3 class="font-medium text-foreground">Password</h3>
+									<p class="text-sm text-muted-foreground">Update your account password</p>
+								</div>
+							</div>
+							<Button
+								variant="outline"
+								onclick={() => showChangePassword = true}
+								class="flex items-center"
+							>
+								<KeyRound class="w-4 h-4 mr-2" />
+								Change Password
+							</Button>
+						</div>
+
+						<!-- Account Information -->
+						<div class="p-4 border border-border rounded-lg">
+							<div class="flex items-center space-x-3 mb-3">
+								<div class="flex-shrink-0">
+									<div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+										<UserCog class="w-5 h-5 text-green-600 dark:text-green-400" />
+									</div>
+								</div>
+								<div>
+									<h3 class="font-medium text-foreground">Account Status</h3>
+									<p class="text-sm text-muted-foreground">Your account security status</p>
+								</div>
+							</div>
+							
+							<div class="grid grid-cols-2 gap-4 text-sm">
+								<div>
+									<span class="text-muted-foreground">Account Status:</span>
+									<Badge variant="success" class="ml-2">Active</Badge>
+								</div>
+								{#if $authState.user?.is_verified !== undefined}
+									<div>
+										<span class="text-muted-foreground">Email Verified:</span>
+										<Badge variant={$authState.user.is_verified ? "success" : "secondary"} class="ml-2">
+											{$authState.user.is_verified ? 'Yes' : 'Pending'}
+										</Badge>
+									</div>
+								{/if}
+								{#if $authState.user?.is_superuser}
+									<div>
+										<span class="text-muted-foreground">Admin Access:</span>
+										<Badge variant="secondary" class="ml-2">Yes</Badge>
+									</div>
+								{/if}
+								<div>
+									<span class="text-muted-foreground">User ID:</span>
+									<code class="ml-2 text-xs">{$authState.user?.id}</code>
+								</div>
+							</div>
+						</div>
+					</div>
+				</Card>
+
+				<!-- Security Tips -->
+				<Card class="p-6">
+					<h3 class="text-lg font-semibold mb-4 flex items-center">
+						<Shield class="w-5 h-5 mr-2 text-primary" />
+						Security Recommendations
+					</h3>
+					<ul class="space-y-3 text-sm text-muted-foreground">
+						<li class="flex items-start space-x-2">
+							<div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+							<span>Use a strong, unique password that includes uppercase, lowercase, numbers, and special characters</span>
+						</li>
+						<li class="flex items-start space-x-2">
+							<div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+							<span>Change your password regularly and avoid reusing old passwords</span>
+						</li>
+						<li class="flex items-start space-x-2">
+							<div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+							<span>Log out from public or shared devices when finished</span>
+						</li>
+						<li class="flex items-start space-x-2">
+							<div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+							<span>Monitor your active sessions and revoke any suspicious activity</span>
+						</li>
+					</ul>
+				</Card>
+			{/if}
+		</div>
+	{:else if activeTab === 'sessions' && $authState.isAuthenticated}
+		<div class="max-w-6xl">
+			<SessionManager />
+		</div>
+	{/if}
 
 	<!-- Status Messages -->
-	{#if hasChanges}
+	{#if hasChanges && activeTab === 'general'}
 		<div class="fixed bottom-4 right-4 bg-accent border border-accent-foreground/20 text-accent-foreground rounded-lg p-4 shadow-lg">
 			<p class="text-sm font-medium">Unsaved changes detected</p>
 			<p class="text-xs opacity-75">Remember to save your settings</p>
