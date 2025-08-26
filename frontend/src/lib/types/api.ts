@@ -259,6 +259,95 @@ export interface AuthResponse {
   };
 }
 
+// V2 Authentication types
+export interface UserRegistrationRequest {
+  username: string;
+  password: string;
+  email?: string;
+  full_name?: string;
+  bio?: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+  remember_me?: boolean;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  user_id: string;
+  username: string;
+  email?: string;
+  full_name?: string;
+  is_verified?: boolean;
+  is_superuser?: boolean;
+}
+
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}
+
+export interface RefreshTokenResponse {
+  access_token: string;
+  expires_in: number;
+}
+
+export interface LogoutRequest {
+  refresh_token?: string;
+  revoke_all?: boolean;
+}
+
+export interface UserResponse {
+  id: string;
+  username: string;
+  email?: string;
+  full_name?: string;
+  bio?: string;
+  is_active?: boolean;
+  is_verified?: boolean;
+  is_superuser?: boolean;
+  created_at?: string;
+  last_login?: string;
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface AuthStatusResponse {
+  auth_required: boolean;
+}
+
+export interface TokenInfoResponse {
+  user_id: string;
+  token_type: string;
+  issued_at: number;
+  expires_at: number;
+  is_expired: boolean;
+  is_revoked: boolean;
+  jti: string;
+}
+
+export interface SessionInfo {
+  id: string;
+  device_name?: string;
+  ip_address?: string;
+  user_agent?: string;
+  last_activity: string;
+  is_current: boolean;
+}
+
+export interface AuthError {
+  detail: string;
+  code?: string;
+  field?: string;
+  type?: 'validation_error' | 'authentication_error' | 'authorization_error' | 'account_locked';
+}
+
 // Note: AuthStatus and AuthValidationResponse are already defined above
 
 export interface ChatSession {

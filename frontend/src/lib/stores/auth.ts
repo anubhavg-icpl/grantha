@@ -17,7 +17,17 @@ interface AuthState {
   user: {
     id: string;
     username: string;
+    email?: string;
+    full_name?: string;
+    is_verified?: boolean;
+    is_superuser?: boolean;
+    created_at?: string;
+    last_login?: string;
   } | null;
+  loginAttempts?: number;
+  isAccountLocked?: boolean;
+  sessionTimeout?: number;
+  csrfToken?: string;
 }
 
 interface TokenData {
@@ -25,6 +35,28 @@ interface TokenData {
   refresh_token: string;
   expires_at: number; // Timestamp when access token expires
   user_id: string;
+}
+
+interface UserProfile {
+  id: string;
+  username: string;
+  email?: string;
+  full_name?: string;
+  bio?: string;
+  is_active?: boolean;
+  is_verified?: boolean;
+  is_superuser?: boolean;
+  created_at?: string;
+  last_login?: string;
+}
+
+interface SessionInfo {
+  id: string;
+  device_name?: string;
+  ip_address?: string;
+  user_agent?: string;
+  last_activity: string;
+  is_current: boolean;
 }
 
 // Initialize auth state
@@ -35,11 +67,16 @@ const initialState: AuthState = {
   error: null,
   redirectTo: undefined,
   user: null,
+  loginAttempts: 0,
+  isAccountLocked: false,
+  sessionTimeout: undefined,
+  csrfToken: undefined,
 };
 
 // Create writable stores
 export const authState = writable<AuthState>(initialState);
 export const authCode = writable<string>("");  // Keep for backward compatibility
+export const userSessions = writable<SessionInfo[]>([]);
 
 // Derived store for computed values
 export const canAccessApp = derived(
@@ -50,6 +87,21 @@ export const canAccessApp = derived(
 export const isAuthLoading = derived(
   authState,
   ($authState) => $authState.isLoading,
+);
+
+export const currentUser = derived(
+  authState,
+  ($authState) => $authState.user,
+);
+
+export const isAccountLocked = derived(
+  authState,
+  ($authState) => $authState.isAccountLocked || false,
+);
+
+export const loginAttempts = derived(
+  authState,
+  ($authState) => $authState.loginAttempts || 0,
 );
 
 // Token management utilities
@@ -190,14 +242,15 @@ export const authActions = {
     }
   },
 
-  // Login with username/password
+  // Login with username/password (v2 API)
   async login(username: string, password: string, rememberMe: boolean = false): Promise<boolean> {
     if (!browser) return false;
 
     authState.update((state) => ({ ...state, isLoading: true, error: null }));
 
     try {
-      const response = await fetch("/auth/login", {
+      // Try v2 API first
+      let response = await fetch("/auth/v2/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -209,9 +262,48 @@ export const authActions = {
         })
       });
 
+      // Fallback to v1 API if v2 fails
+      if (!response.ok && response.status === 404) {
+        response = await fetch("/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username,
+            password,
+            remember_me: rememberMe
+          })
+        });
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Login failed: ${response.status}`);
+        
+        // Handle account lockout
+        if (response.status === 423) {
+          authState.update((state) => ({ 
+            ...state, 
+            isAccountLocked: true,
+            loginAttempts: 0,
+            isLoading: false,
+            error: errorData.detail || "Account temporarily locked due to multiple failed attempts"
+          }));
+          return false;
+        }
+        
+        // Track login attempts
+        if (response.status === 401) {
+          authState.update((state) => ({ 
+            ...state, 
+            loginAttempts: (state.loginAttempts || 0) + 1,
+            isLoading: false,
+            error: errorData.detail || "Invalid credentials"
+          }));
+          return false;
+        }
+        
+        throw new Error(errorData.detail || errorData.message || `Login failed: ${response.status}`);
       }
 
       const loginResult = await response.json();
@@ -227,15 +319,24 @@ export const authActions = {
       storeTokens(tokenData);
       apiClient.setToken(loginResult.access_token);
 
+      // Enhanced user data from v2 API
+      const userData = {
+        id: loginResult.user_id,
+        username: loginResult.username || username,
+        email: loginResult.email,
+        full_name: loginResult.full_name,
+        is_verified: loginResult.is_verified,
+        is_superuser: loginResult.is_superuser
+      };
+
       authState.update((state) => ({
         ...state,
         isAuthenticated: true,
-        user: {
-          id: loginResult.user_id,
-          username: username
-        },
+        user: userData,
         isLoading: false,
         error: null,
+        loginAttempts: 0,
+        isAccountLocked: false,
       }));
 
       return true;
@@ -268,7 +369,7 @@ export const authActions = {
     return await authActions.loginWithCode(code);
   },
 
-  // Refresh access token
+  // Refresh access token (v2 API with fallback)
   async refreshToken(): Promise<boolean> {
     if (!browser) return false;
 
@@ -278,7 +379,8 @@ export const authActions = {
     }
 
     try {
-      const response = await fetch("/auth/refresh", {
+      // Try v2 API first
+      let response = await fetch("/auth/v2/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -287,6 +389,19 @@ export const authActions = {
           refresh_token: storedTokens.refresh_token
         })
       });
+
+      // Fallback to v1 API if v2 fails
+      if (!response.ok && response.status === 404) {
+        response = await fetch("/auth/refresh", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            refresh_token: storedTokens.refresh_token
+          })
+        });
+      }
 
       if (!response.ok) {
         return false;
@@ -311,7 +426,7 @@ export const authActions = {
     }
   },
 
-  // Logout
+  // Logout (v2 API with fallback)
   async logout(revokeAll: boolean = false): Promise<void> {
     if (!browser) return;
 
@@ -320,7 +435,8 @@ export const authActions = {
     try {
       // Call logout endpoint to revoke tokens on server
       if (storedTokens) {
-        await fetch("/auth/logout", {
+        // Try v2 API first
+        let response = await fetch("/auth/v2/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -331,6 +447,21 @@ export const authActions = {
             revoke_all: revokeAll
           })
         });
+
+        // Fallback to v1 API if v2 fails
+        if (!response.ok && response.status === 404) {
+          await fetch("/auth/logout", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${storedTokens.access_token}`
+            },
+            body: JSON.stringify({
+              refresh_token: storedTokens.refresh_token,
+              revoke_all: revokeAll
+            })
+          });
+        }
       }
     } catch (error) {
       console.error("Logout API call failed:", error);
@@ -341,6 +472,7 @@ export const authActions = {
     clearStoredTokens();
     apiClient.clearToken();
     authCode.set("");
+    userSessions.set([]);
 
     authState.update((state) => ({
       ...state,
@@ -348,6 +480,9 @@ export const authActions = {
       user: null,
       error: null,
       redirectTo: undefined,
+      loginAttempts: 0,
+      isAccountLocked: false,
+      sessionTimeout: undefined,
     }));
 
     // Redirect to login page
@@ -374,6 +509,279 @@ export const authActions = {
       authState.update((state) => ({ ...state, redirectTo: undefined }));
     }
     return redirectTo;
+  },
+
+  // Register new user (v2 API only)
+  async register(userData: {
+    username: string;
+    password: string;
+    email?: string;
+    full_name?: string;
+    bio?: string;
+  }): Promise<{success: boolean; user?: UserProfile; error?: string}> {
+    if (!browser) return {success: false, error: "Not in browser environment"};
+
+    authState.update((state) => ({ ...state, isLoading: true, error: null }));
+
+    try {
+      const response = await fetch("/auth/v2/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        authState.update((state) => ({
+          ...state,
+          isLoading: false,
+          error: result.detail || "Registration failed"
+        }));
+        return {success: false, error: result.detail || "Registration failed"};
+      }
+
+      authState.update((state) => ({ ...state, isLoading: false, error: null }));
+      return {success: true, user: result};
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Registration failed";
+      authState.update((state) => ({
+        ...state,
+        isLoading: false,
+        error: errorMessage
+      }));
+      return {success: false, error: errorMessage};
+    }
+  },
+
+  // Get current user profile (v2 API)
+  async getCurrentUser(): Promise<UserProfile | null> {
+    if (!browser) return null;
+
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access_token) return null;
+
+    try {
+      const response = await fetch("/auth/v2/me", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${storedTokens.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired, try to refresh
+          const refreshed = await authActions.refreshToken();
+          if (refreshed) {
+            return await authActions.getCurrentUser();
+          }
+        }
+        return null;
+      }
+
+      const userProfile = await response.json();
+      
+      // Update auth state with current user data
+      authState.update((state) => ({
+        ...state,
+        user: {
+          id: userProfile.id,
+          username: userProfile.username,
+          email: userProfile.email,
+          full_name: userProfile.full_name,
+          is_verified: userProfile.is_verified,
+          is_superuser: userProfile.is_superuser,
+          created_at: userProfile.created_at,
+          last_login: userProfile.last_login
+        }
+      }));
+
+      return userProfile;
+    } catch (error) {
+      console.error("Failed to get current user:", error);
+      return null;
+    }
+  },
+
+  // Update user profile (v2 API)
+  async updateUserProfile(updates: Partial<UserProfile>): Promise<{success: boolean; user?: UserProfile; error?: string}> {
+    if (!browser) return {success: false, error: "Not in browser environment"};
+
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access_token) {
+      return {success: false, error: "Not authenticated"};
+    }
+
+    authState.update((state) => ({ ...state, isLoading: true, error: null }));
+
+    try {
+      const response = await fetch("/auth/v2/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${storedTokens.access_token}`
+        },
+        body: JSON.stringify(updates)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        authState.update((state) => ({
+          ...state,
+          isLoading: false,
+          error: result.detail || "Update failed"
+        }));
+        return {success: false, error: result.detail || "Update failed"};
+      }
+
+      // Update auth state with new user data
+      authState.update((state) => ({
+        ...state,
+        isLoading: false,
+        error: null,
+        user: {
+          ...state.user,
+          ...result
+        }
+      }));
+
+      return {success: true, user: result};
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Update failed";
+      authState.update((state) => ({
+        ...state,
+        isLoading: false,
+        error: errorMessage
+      }));
+      return {success: false, error: errorMessage};
+    }
+  },
+
+  // Change password (v2 API)
+  async changePassword(currentPassword: string, newPassword: string): Promise<{success: boolean; error?: string}> {
+    if (!browser) return {success: false, error: "Not in browser environment"};
+
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access_token) {
+      return {success: false, error: "Not authenticated"};
+    }
+
+    authState.update((state) => ({ ...state, isLoading: true, error: null }));
+
+    try {
+      const response = await fetch("/auth/v2/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${storedTokens.access_token}`
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        authState.update((state) => ({
+          ...state,
+          isLoading: false,
+          error: result.detail || "Password change failed"
+        }));
+        return {success: false, error: result.detail || "Password change failed"};
+      }
+
+      // Password changed successfully, all sessions logged out
+      authState.update((state) => ({ ...state, isLoading: false, error: null }));
+      
+      // Clear tokens and redirect to login
+      setTimeout(() => {
+        authActions.logout(false);
+      }, 1000);
+
+      return {success: true};
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Password change failed";
+      authState.update((state) => ({
+        ...state,
+        isLoading: false,
+        error: errorMessage
+      }));
+      return {success: false, error: errorMessage};
+    }
+  },
+
+  // Get user sessions (v2 API)
+  async getUserSessions(): Promise<SessionInfo[]> {
+    if (!browser) return [];
+
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access_token) return [];
+
+    try {
+      const response = await fetch("/auth/v2/sessions", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${storedTokens.access_token}`
+        }
+      });
+
+      if (!response.ok) return [];
+
+      const result = await response.json();
+      const sessions = result.sessions || [];
+      
+      userSessions.set(sessions);
+      return sessions;
+    } catch (error) {
+      console.error("Failed to get user sessions:", error);
+      return [];
+    }
+  },
+
+  // Revoke session (v2 API)
+  async revokeSession(sessionId: string): Promise<{success: boolean; error?: string}> {
+    if (!browser) return {success: false, error: "Not in browser environment"};
+
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access_token) {
+      return {success: false, error: "Not authenticated"};
+    }
+
+    try {
+      const response = await fetch(`/auth/v2/sessions/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${storedTokens.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        return {success: false, error: result.detail || "Failed to revoke session"};
+      }
+
+      // Refresh sessions list
+      await authActions.getUserSessions();
+      return {success: true};
+    } catch (error) {
+      return {success: false, error: error instanceof Error ? error.message : "Failed to revoke session"};
+    }
+  },
+
+  // Clear account lockout (for UI)
+  clearAccountLockout(): void {
+    authState.update((state) => ({
+      ...state,
+      isAccountLocked: false,
+      loginAttempts: 0,
+      error: null
+    }));
   },
 };
 

@@ -100,7 +100,12 @@ class APIClient {
 
   // Authentication methods
   async getAuthStatus(): Promise<{ auth_required: boolean }> {
-    return this.request<{ auth_required: boolean }>("/auth/status");
+    // Try v2 API first, fallback to v1
+    try {
+      return await this.request<{ auth_required: boolean }>("/auth/v2/status");
+    } catch (error) {
+      return await this.request<{ auth_required: boolean }>("/auth/status");
+    }
   }
 
   async validateAuthCode(config: {
@@ -116,21 +121,137 @@ class APIClient {
     return this.request("/auth/lang/config");
   }
 
-  // Legacy methods for compatibility - implement as needed
+  // V2 Authentication methods
+  async registerUser(userData: {
+    username: string;
+    password: string;
+    email?: string;
+    full_name?: string;
+    bio?: string;
+  }): Promise<any> {
+    return this.request("/auth/v2/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async loginUser(credentials: {
+    username: string;
+    password: string;
+    remember_me?: boolean;
+  }): Promise<any> {
+    return this.request("/auth/v2/login", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    });
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<any> {
+    return this.request("/auth/v2/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+  }
+
+  async logoutUser(logoutData?: {
+    refresh_token?: string;
+    revoke_all?: boolean;
+  }): Promise<any> {
+    return this.request("/auth/v2/logout", {
+      method: "POST",
+      body: JSON.stringify(logoutData || {}),
+    });
+  }
+
+  async getCurrentUser(): Promise<any> {
+    return this.request("/auth/v2/me");
+  }
+
+  async updateCurrentUser(updateData: any): Promise<any> {
+    return this.request("/auth/v2/me", {
+      method: "PUT",
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  async changePassword(passwordData: {
+    current_password: string;
+    new_password: string;
+  }): Promise<any> {
+    return this.request("/auth/v2/change-password", {
+      method: "POST",
+      body: JSON.stringify(passwordData),
+    });
+  }
+
+  async getUserSessions(): Promise<any> {
+    return this.request("/auth/v2/sessions");
+  }
+
+  async revokeSession(sessionId: string): Promise<any> {
+    return this.request(`/auth/v2/sessions/${sessionId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getTokenInfo(): Promise<any> {
+    return this.request("/auth/v2/token/info");
+  }
+
+  // Legacy methods for compatibility
   async login(credentials: AuthRequest): Promise<AuthResponse> {
-    // Note: Backend doesn't have login endpoint, implement based on auth flow
-    throw new Error("Login endpoint not implemented in backend API");
+    try {
+      const response = await this.loginUser({
+        username: credentials.username,
+        password: credentials.password,
+      });
+      
+      return {
+        access_token: response.access_token,
+        token_type: "Bearer",
+        user: {
+          id: response.user_id,
+          username: response.username,
+          email: response.email,
+        },
+      };
+    } catch (error) {
+      throw new Error("Login failed");
+    }
   }
 
   async register(credentials: AuthRequest): Promise<AuthResponse> {
-    // Note: Backend doesn't have register endpoint, implement based on auth flow
-    throw new Error("Register endpoint not implemented in backend API");
+    try {
+      const response = await this.registerUser({
+        username: credentials.username,
+        password: credentials.password,
+      });
+      
+      return {
+        access_token: "", // Registration doesn't return token
+        token_type: "Bearer",
+        user: {
+          id: response.id,
+          username: response.username,
+          email: response.email,
+        },
+      };
+    } catch (error) {
+      throw new Error("Registration failed");
+    }
   }
 
   async logout(): Promise<void> {
+    try {
+      await this.logoutUser();
+    } catch (error) {
+      console.warn("Logout API call failed:", error);
+    }
+    
     this.token = null;
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem("grantha_auth_token");
+      localStorage.removeItem("grantha-tokens");
     }
   }
 
