@@ -28,14 +28,19 @@ class HTTPInterceptor {
   constructor(config: Partial<InterceptorConfig> = {}) {
     this.config = {
       tokenStorageKey: 'grantha-tokens',
-      refreshEndpoint: '/auth/refresh',
+      refreshEndpoint: '/auth/v2/refresh',
       maxRetries: 1,
-      excludeUrls: ['/auth/login', '/auth/refresh', '/auth/status', '/health'],
+      excludeUrls: [
+        '/auth/login', '/auth/refresh', '/auth/status', '/health',
+        '/auth/v2/login', '/auth/v2/refresh', '/auth/v2/status', '/auth/v2/register'
+      ],
       ...config
     };
 
-    // Override fetch globally
-    this.interceptFetch();
+    // Only intercept fetch on the client side (browser)
+    if (typeof window !== 'undefined') {
+      this.interceptFetch();
+    }
   }
 
   private interceptFetch(): void {
@@ -97,6 +102,9 @@ class HTTPInterceptor {
   }
 
   private getStoredTokens(): TokenData | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
     try {
       const stored = localStorage.getItem(this.config.tokenStorageKey);
       return stored ? JSON.parse(stored) : null;
@@ -107,6 +115,9 @@ class HTTPInterceptor {
   }
 
   private storeTokens(tokens: TokenData): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
     try {
       localStorage.setItem(this.config.tokenStorageKey, JSON.stringify(tokens));
     } catch (error) {
@@ -115,6 +126,9 @@ class HTTPInterceptor {
   }
 
   private clearTokens(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
     localStorage.removeItem(this.config.tokenStorageKey);
     // Also clear legacy auth code storage
     localStorage.removeItem('grantha-auth-code');
@@ -142,7 +156,8 @@ class HTTPInterceptor {
         throw new Error('No refresh token available');
       }
 
-      const response = await fetch(this.config.refreshEndpoint, {
+      // Try v2 refresh endpoint first, fallback to v1
+      let response = await fetch(this.config.refreshEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -151,6 +166,19 @@ class HTTPInterceptor {
           refresh_token: tokens.refresh_token
         })
       });
+
+      // Fallback to v1 API if v2 fails
+      if (!response.ok && response.status === 404) {
+        response = await fetch('/auth/refresh', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            refresh_token: tokens.refresh_token
+          })
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${response.status}`);

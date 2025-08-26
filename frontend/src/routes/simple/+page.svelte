@@ -14,6 +14,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { apiClient } from '$lib/api/client';
 	import type { SimpleRequest, RAGRequest } from '$lib/types/api';
+	import { generateUUID } from '$lib/utils/uuid';
 
 	interface SimpleResult {
 		id: string;
@@ -37,7 +38,7 @@
 
 		isLoadingChat = true;
 		const result: SimpleResult = {
-			id: crypto.randomUUID(),
+			id: generateUUID(),
 			type: 'chat',
 			query: chatQuery.trim(),
 			createdAt: new Date().toISOString()
@@ -66,7 +67,7 @@
 
 		isLoadingRag = true;
 		const result: SimpleResult = {
-			id: crypto.randomUUID(),
+			id: generateUUID(),
 			type: 'rag',
 			query: ragQuery.trim(),
 			context: ragContext.trim() || undefined,
